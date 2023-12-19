@@ -10,7 +10,7 @@ while ( have_posts() ) : the_post();
     <!-- Hero Section -->
     <?php if( get_field('banner_image') ): ?>
     <section class="hero-section relative bg-primary bg-center bg-no-repeat bg-cover"
-      style="background-image: url(<?php the_field('banner_image'); ?>)"><h1>Milan</h1>
+      style="background-image: url(<?php the_field('banner_image'); ?>)">
     <?php endif; ?>
       <div class="container relative pt-14 md:pt-20 xl:pt-24 2xl:pt-36">
 
