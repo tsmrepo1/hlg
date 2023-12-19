@@ -17,7 +17,7 @@ $(document).ready(function () {
         $this.parent().addClass("active");
       }
     });
-  } 
+  }
   // else {
   //   $(".site-header .nav-menu li:first-child").addClass("active");
   // }
@@ -264,5 +264,25 @@ $(document).ready(function () {
 
       // console.log(minVal, maxVal);
     });
+  });
+
+  // search form
+  $(".site-header__btn--search").on("click", function () {
+    $("#searchFormWrap").toggleClass("hidden");
+  });
+
+  $(".tabs-nav a").click(function (e) {
+    e.preventDefault();
+
+    // Check for active
+    $(".tabs-nav li").removeClass("active");
+    $(this).parent().addClass("active");
+
+    // Display active tab
+    let currentTab = $(this).attr("href");
+    $(".tabs-content > div").hide();
+    $(currentTab).show();
+
+    return false;
   });
 });

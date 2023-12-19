@@ -17706,7 +17706,7 @@ $(document).ready(function () {
   }
 
   // Hero Swiper
-  var swiperProductCard = new core(".product-card-swiper", {
+  var swiperHero = new core(".hero-swiper", {
     // Optional parameters
     direction: "horizontal",
     loop: false,
@@ -17714,7 +17714,6 @@ $(document).ready(function () {
     pauseOnMouseEnter: true,
     slidesPerView: 1,
     speed: 1000,
-    effect: 'fade',
     // If we need pagination
     pagination: {
       el: ".swiper-pagination",
@@ -17743,8 +17742,10 @@ $(document).ready(function () {
     }
   });
 
-  // Testimonial Swiper
-  var swiperProducts = new core(".swiper--products", {
+  // Product Card Swiper
+
+  // Top Products Swiper
+  var swiperProducts = new core(".products-swiper", {
     // Optional parameters
     direction: "horizontal",
     loop: false,
@@ -17755,16 +17756,32 @@ $(document).ready(function () {
     },
     breakpoints: {
       320: {
+        slidesPerView: 1,
+        spaceBetween: 0
+      },
+      576: {
         slidesPerView: 2,
-        spaceBetween: 12
+        spaceBetween: 0
       },
       768: {
-        slidesPerView: 3,
-        spaceBetween: 24
+        slidesPerView: 2,
+        spaceBetween: 4
       },
       1024: {
-        slidesPerView: 4,
-        spaceBetween: 24
+        slidesPerView: 3,
+        spaceBetween: 8
+      },
+      1200: {
+        slidesPerView: 3,
+        spaceBetween: 4
+      },
+      1400: {
+        slidesPerView: 3,
+        spaceBetween: 8
+      },
+      1700: {
+        slidesPerView: 3,
+        spaceBetween: 18
       }
     },
     // If we need pagination
@@ -17790,10 +17807,80 @@ $(document).ready(function () {
     },
     // Navigation arrows
     navigation: {
-      nextEl: ".swiper-button-next",
-      prevEl: ".swiper-button-prev"
+      nextEl: ".swiper-button-next--top-products",
+      prevEl: ".swiper-button-prev--top-products"
     }
   });
+
+  // Main Products Slider
+  var swiperProductsMain = new core(".products-swiper-main", {
+    // Optional parameters
+    direction: "horizontal",
+    loop: false,
+    speed: 1000,
+    autoplay: {
+      delay: 5000,
+      pauseOnMouseEnter: true
+    },
+    breakpoints: {
+      320: {
+        slidesPerView: 1,
+        spaceBetween: 0
+      },
+      576: {
+        slidesPerView: 2,
+        spaceBetween: 0
+      },
+      768: {
+        slidesPerView: 2,
+        spaceBetween: 4
+      },
+      1024: {
+        slidesPerView: 3,
+        spaceBetween: 8
+      },
+      1200: {
+        slidesPerView: 4,
+        spaceBetween: 4
+      },
+      1400: {
+        slidesPerView: 4,
+        spaceBetween: 8
+      },
+      1700: {
+        slidesPerView: 4,
+        spaceBetween: 18
+      }
+    },
+    // If we need pagination
+    pagination: {
+      el: ".swiper-pagination",
+      clickable: true,
+      renderCustom: function renderCustom(swiper, current, total) {
+        var names = [];
+        $(".swiper-wrapper .swiper-slide").each(function (i) {
+          names.push($(this).data("name"));
+        });
+        var text = "<ul>";
+        for (var i = 1; i <= total; i++) {
+          if (current == i) {
+            text += "<li class=\"swiper-pagination-bullet active\">".concat(names[i], "</li>");
+          } else {
+            text += "<li class=\"swiper-pagination-bullet\">".concat(names[i], "</li>");
+          }
+        }
+        text += "</ul>";
+        return text;
+      }
+    }
+
+    // Navigation arrows
+    // navigation: {
+    //   nextEl: ".swiper-button-next--top-products",
+    //   prevEl: ".swiper-button-prev--top-products",
+    // },
+  });
+
   // Testimonial Swiper
   var swiperTestimonial = new core(".testimonial-swiper", {
     // Optional parameters
@@ -17807,18 +17894,30 @@ $(document).ready(function () {
     breakpoints: {
       320: {
         slidesPerView: 1,
-        spaceBetween: 12
+        spaceBetween: 0
+      },
+      576: {
+        slidesPerView: 3,
+        spaceBetween: 0
       },
       768: {
-        slidesPerView: 1,
-        spaceBetween: 24
+        slidesPerView: 3,
+        spaceBetween: 12
       },
       1024: {
-        slidesPerView: 2,
-        spaceBetween: 24
+        slidesPerView: 3,
+        spaceBetween: 16
       },
       1200: {
-        slidesPerView: 2,
+        slidesPerView: 4,
+        spaceBetween: 16
+      },
+      1400: {
+        slidesPerView: 5,
+        spaceBetween: 20
+      },
+      1700: {
+        slidesPerView: 5,
         spaceBetween: 24
       }
     },
@@ -17845,8 +17944,8 @@ $(document).ready(function () {
     },
     // Navigation arrows
     navigation: {
-      nextEl: ".swiper-button-next",
-      prevEl: ".swiper-button-prev"
+      nextEl: ".swiper-button-next--custom",
+      prevEl: ".swiper-button-prev--custom"
     }
   });
   $('input[type="checkbox"]').each(function () {
@@ -17925,22 +18024,22 @@ $(document).ready(function () {
   });
 
   // FAQS FUNCTION
-  var faqBtns = $('.faq-item .faq-item__header button');
+  var faqBtns = $(".faq-item .faq-item__header button");
   faqBtns.each(function () {
-    $(this).on('click', function () {
+    $(this).on("click", function () {
       // GETTING TARGET ID
-      var getTargetID = $(this).closest('.faq-item').attr('data-target');
+      var getTargetID = $(this).closest(".faq-item").attr("data-target");
       if (window.innerWidth > 1023) {
-        $('.faq-item__icon').text("+");
-        $(this).closest('.faq-item').find('.faq-item__icon').text('-');
+        $(".faq-item__icon").text("+");
+        $(this).closest(".faq-item").find(".faq-item__icon").text("-");
       }
 
       // FOR LARGE SCREEN SHOWING LG FAQ CONTENT AS PER DATA ID
-      $('.faq-item-detail-block').each(function () {
-        if ($(this).attr('data-id') === getTargetID) {
-          $(this).removeClass('hidden');
+      $(".faq-item-detail-block").each(function () {
+        if ($(this).attr("data-id") === getTargetID) {
+          $(this).removeClass("hidden");
         } else {
-          $(this).addClass('hidden');
+          $(this).addClass("hidden");
         }
       });
     });
@@ -18078,11 +18177,11 @@ $(document).ready(function () {
   });
 
   // VIDEO PLAY BUTTON FUNCTION
-  var videoPlayBtns = $('.video__btn--play');
+  var videoPlayBtns = $(".video__btn--play");
   videoPlayBtns.each(function () {
-    $(this).on('click', function (e) {
-      var getVideoEl = $(this).closest('.video-container').find('video');
-      $(this).closest('.video-container').find('.video__thumbnail').hide();
+    $(this).on("click", function (e) {
+      var getVideoEl = $(this).closest(".video-container").find("video");
+      $(this).closest(".video-container").find(".video__thumbnail").hide();
       $(this).css("visibility", "hidden");
       // console.log(getVideoEl[0].paused);
 
@@ -18095,11 +18194,11 @@ $(document).ready(function () {
   });
   videoPlayBtns.each(function () {
     var el = $(this);
-    var getVideoEl = $(this).closest('.video-container').find('video');
-    getVideoEl.on('playing', function () {
+    var getVideoEl = $(this).closest(".video-container").find("video");
+    getVideoEl.on("playing", function () {
       el.css("visibility", "hidden");
     });
-    getVideoEl.on('pause', function () {
+    getVideoEl.on("pause", function () {
       el.css("visibility", "visible");
     });
   });
