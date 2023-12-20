@@ -1,0 +1,137 @@
+/*!
+Theme Name: hlg
+Theme URI: http://underscores.me/
+Author: Underscores.me
+Author URI: http://underscores.me/
+Description: Description
+Version: 1.0.0
+Tested up to: 5.4
+Requires PHP: 5.6
+License: GNU General Public License v2 or later
+License URI: LICENSE
+Text Domain: hlg
+Tags: custom-background, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready
+*/
+.woocommerce-notices-wrapper{
+	display: none !important;
+}
+tinvwl_add_to_wishlist_button{
+	background-color: #51c9ec;
+	border-radius: 50%;
+}
+.tinvwl_add_to_wishlist_button.tinvwl-icon-heart.no-txt{
+	width: 37px !important;
+	height: 38px !important;
+}
+.cart{
+	display: flex;
+}
+.entry-title{
+	display:none;
+}
+#place_order{
+	background-color: rgb(81 201 236);
+}
+@media (max-width: 1023px) {
+.large_form {
+  display: none;
+}
+}
+
+.wishlist_products_counter {
+    position: relative;
+}
+.wishlist_products_counter .wishlist_products_counter_number {
+    position: absolute;
+    left: 0px;
+    top: -7px;
+    color: #fff;
+    font-size: 0.75rem;
+}
+@media (max-width: 1023px) {
+.wishlist_products_counter { 
+    display: none;
+}
+}
+.wpcf7 form .wpcf7-response-output {
+    /* margin: 2em 0.5em 1em; */
+    padding: 0.2em 1em;
+    border: 2px solid #00a0d2;
+    margin: -3.75rem 0 1.25rem 0;
+    color: #fff;
+    font-size: 0.75rem;
+}
+.wishlist_products_counter_text{
+    display: none;
+}
+
+/* my account */
+
+.woocommerce-account .woocommerce-MyAccount-navigation {
+	width: 100%;
+}
+.woocommerce-MyAccount-navigation ul {
+	display: flex;
+	position: relative;
+	overflow-x: scroll;
+}
+.woocommerce-MyAccount-navigation ul::before {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 1px;
+	background-color: var(--bs-gray-400);
+}
+.woocommerce-MyAccount-navigation ul li {
+	margin-right: 1.25rem;
+	position: relative;
+}
+.woocommerce-MyAccount-navigation ul li::before {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 0%;
+	height: 2px;
+	background-color: var(--bs-primary);
+}
+.woocommerce-MyAccount-navigation ul li.is-active::before {
+	width: 100%;
+}
+.woocommerce-MyAccount-navigation ul li a {
+	color: var(--bs-dark);
+	padding-bottom: 0.75rem;
+	display: inline-block;
+	white-space: nowrap;
+}
+.woocommerce-MyAccount-navigation ul li.is-active a {
+	color: var(--bs-primary);
+}
+.woocommerce-account .woocommerce-MyAccount-content {
+	width: 100%;
+	padding-top: 2.5rem;
+	text-align: left;
+}
+.woocommerce-MyAccount-content a {
+	color: var(--bs-primary);
+}
+.woocommerce-MyAccount-content a:hover {
+	text-decoration: underline;
+}
+@media (min-width: 768px) {
+	.woocommerce-MyAccount-navigation ul {
+		overflow-x: hidden;
+	}
+}
+
+.cart-section button[type="submit"]{
+	padding:16px 36px;
+	background-color:#7161d0;
+	color:#fff;
+	border-radius:3.75rem;
+}
+.cart-section button[type="submit"]:focus{
+	color:#fff;
+}
