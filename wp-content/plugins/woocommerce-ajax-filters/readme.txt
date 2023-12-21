@@ -4,8 +4,8 @@ Contributors: dholovnia, berocket
 Donate link: https://berocket.com/woocommerce-ajax-products-filter/?utm_source=wordpress_org&utm_medium=donate&utm_campaign=ajax_filters
 Tags: filters, product filters, ajax product filters, ajax filter, ajax filter widget, color filter, size filter, product onsale filter, product preview, product category filter, product reset filter, product sort by filter, stock filter, product tag filter, price range filter, price box filter, advanced product filters, woocommerce filters, woocommerce product filters, woocommerce products filter, woocommerce ajax product filters, widget, plugin, woocommerce item filters, filters plugin, ajax filters plugin, filter woocommerce products, filter woocommerce products plugin, wc filters, wc filters products, wc products filters, wc ajax products filters, wc product filters, wc advanced product filters, woocommerce layered nav, woocommerce layered navigation, ajax filtered nav, ajax filtered navigation, price filter, ajax price filter, woocommerce product sorting, sidebar filter, sidebar ajax filter, taxonomy filter, category filter, attribute filter, attributes filter, woocommerce product sort, ajax products filter plugin for woocommerce, rocket, berocket, berocket woocommerce ajax products filter
 Requires at least: 5.0
-Tested up to: 6.1
-Stable tag: 1.6.3.4
+Tested up to: 6.3.1
+Stable tag: 1.6.4.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -188,6 +188,37 @@ You can try this plugin's admin side [here](https://berocket.com/woocommerce-aja
 ---
 
 == Changelog ==
+
+= 1.6.4.5 =
+* Enhancement - Add-on Filter Additional Settings
+* Enhancement - Option to replace categories shortcode with products
+* Fix - Divi module styles
+* Fix - Pagination with incorrect selectors
+* Fix - MariaDB 10.4 compatibility for database update
+
+= 1.6.4.4 =
+* Enhancement - WooCommerce High-Performance Order Storage support enable
+
+= 1.6.4.3 =
+* Fix - Link like WooCommerce add-on with slider
+
+= 1.6.4.2 =
+* Enhancement - New Divi module functionality
+* Fix - Pagination replace with translation
+* Fix - Price range on search page and some other pages
+* Fix - Link like WooCommerce add-on
+* Fix - Compatibility with WooCommerce 7.8
+* Fix - Primary key for tables in plugin
+
+= 1.6.4.1 =
+* Fix - Divi Module for group do not display filters
+
+= 1.6.4 =
+* Enhancement - Divi Modules with more options
+* Fix - Additional table generation for some database
+* Fix - Price Range filtering
+* Fix - Error filters do not exist
+* Fix - Divi Module preview styles
 
 = 1.6.3.4 =
 * Enhancement - Additional tables generation to not change collation

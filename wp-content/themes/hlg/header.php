@@ -53,7 +53,7 @@ global $current_user;
 
             <!-- MAIN NAVIGATION -->
             <nav class="col-span-8 site-header__nav text-center px-8 -2xl:px-5 -xl:hidden">
-              <ul class="nav-menu inline-flex items-center">
+              <!-- <ul class="nav-menu inline-flex items-center">
                 <li class="xl:mr-4 2xl:mr-5">
                   <a href="products.html">Alkaline Water Ionizers</a>
                 </li>
@@ -66,7 +66,21 @@ global $current_user;
                 <li class="xl:mr-4 2xl:mr-5">
                   <a href="contact-us.html">Contact Us!</a>
                 </li>
-              </ul>
+              </ul> -->
+
+
+              <?php
+                  wp_nav_menu( array(
+                  'theme_location'  => 'menu-1',
+                  'depth'           => 2, // 1 = no dropdowns, 2 = with dropdowns.
+                  'container'       => '',
+                  'container_class' => '',
+                  'container_id'    => '',
+                  'menu_class'      => 'nav-menu inline-flex items-center',
+                  'fallback_cb'     => 'WP_Bootstrap_Navwalker::fallback',
+                  'walker'          => new WP_Bootstrap_Navwalker(),
+                  ) );
+              ?>
             </nav>
 
             <!-- SITE HEADER CTA BUTTONS -->

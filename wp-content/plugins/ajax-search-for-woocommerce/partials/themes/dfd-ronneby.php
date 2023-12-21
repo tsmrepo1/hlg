@@ -5,11 +5,6 @@ if ( ! defined( 'DGWT_WCAS_FILE' ) ) {
 	exit;
 }
 
-// Change mobile breakpoint
-add_filter( 'dgwt/wcas/scripts/mobile_breakpoint', function () {
-	return 500;
-} );
-
 add_action( 'wp_footer', function () {
 	if ( ! class_exists( 'Dfd_Theme_Helpers' ) || ! method_exists( 'Dfd_Theme_Helpers', 'getHeaderStyleOption' ) ) {
 		return;
@@ -31,7 +26,7 @@ add_action( 'wp_footer', function () {
 						setTimeout(function () {
 							var $input = $('.form-search-section .dgwt-wcas-search-input');
 							if ($input.length > 0) {
-								$input.focus();
+								$input.trigger('focus');
 							}
 						}, 800)
 					});

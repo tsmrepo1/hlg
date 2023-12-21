@@ -2,7 +2,7 @@
  * External dependencies
  */
 import { __, sprintf } from '@wordpress/i18n';
-import FormattedMonetaryAmount from '@woocommerce/base-components/formatted-monetary-amount';
+import { FormattedMonetaryAmount } from '@woocommerce/blocks-components';
 import classNames from 'classnames';
 import { formatPrice } from '@woocommerce/price-format';
 import { createInterpolateElement } from '@wordpress/element';
@@ -239,6 +239,15 @@ export interface ProductPriceProps {
 	 * Custom style to apply to the regular price wrapper.
 	 */
 	regularPriceStyle?: React.CSSProperties | undefined;
+	/**
+	 * Custom margin to apply to the price wrapper.
+	 */
+	style?:
+		| Pick<
+				React.CSSProperties,
+				'marginTop' | 'marginRight' | 'marginBottom' | 'marginLeft'
+		  >
+		| undefined;
 }
 
 const ProductPrice = ( {
@@ -254,6 +263,7 @@ const ProductPrice = ( {
 	regularPrice,
 	regularPriceClassName,
 	regularPriceStyle,
+	style,
 }: ProductPriceProps ): JSX.Element => {
 	const wrapperClassName = classNames(
 		className,
@@ -270,7 +280,7 @@ const ProductPrice = ( {
 		console.error( 'Price formats need to include the `<price/>` tag.' );
 	}
 
-	const isDiscounted = regularPrice && price !== regularPrice;
+	const isDiscounted = regularPrice && price && price < regularPrice;
 	let priceComponent = (
 		<span
 			className={ classNames(
@@ -317,7 +327,7 @@ const ProductPrice = ( {
 	}
 
 	return (
-		<span className={ wrapperClassName }>
+		<span className={ wrapperClassName } style={ style }>
 			{ createInterpolateElement( format, {
 				price: priceComponent,
 			} ) }

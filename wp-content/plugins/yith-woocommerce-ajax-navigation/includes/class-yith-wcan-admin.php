@@ -2,7 +2,7 @@
 /**
  * Admin class
  *
- * @author  YITH
+ * @author  YITH <plugins@yithemes.com>
  * @package YITH\AjaxProductFilter\Classes
  * @version 4.0.0
  */
@@ -47,7 +47,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 *
 		 * @access public
 		 * @since  1.0.0
-		 * @author Andrea Grillo <andrea.grillo@yithemes.com>
 		 */
 		public function __construct() {
 			// admin scripts.
@@ -151,7 +150,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 * Get the premium landing uri
 		 *
 		 * @since   1.0.0
-		 * @author  Andrea Grillo <andrea.grillo@yithemes.com>
 		 * @return  string The premium landing link
 		 */
 		public function get_premium_landing_uri() {
@@ -174,9 +172,25 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 			}
 
 			$admin_tabs = array(
-				'filter-preset' => _x( 'Filter presets', '[Admin] tab name', 'yith-woocommerce-ajax-navigation' ),
-				'general'       => _x( 'General settings', '[Admin] tab name', 'yith-woocommerce-ajax-navigation' ),
-				'seo'           => _x( 'SEO', '[Admin] tab name', 'yith-woocommerce-ajax-navigation' ),
+				'filter-preset' => array(
+					'title'       => _x( 'Filter presets', '[Admin] tab name', 'yith-woocommerce-ajax-navigation' ),
+					'icon'        => '<svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"></path>
+</svg>',
+					'description' => esc_html__( 'The list of all filter sets created and configured for your shop.', 'yith-woocommerce-ajax-navigation' ),
+				),
+				'general'       => array(
+					'title'       => _x( 'General options', '[Admin] tab name', 'yith-woocommerce-ajax-navigation' ),
+					'description' => _x( 'Configure the general settings of the plugin', '[Admin] tab description', 'yith-woocommerce-ajax-navigation' ),
+					'icon'        => 'settings',
+				),
+				'seo'           => array(
+					'title'       => _x( 'SEO', '[Admin] tab name', 'yith-woocommerce-ajax-navigation' ),
+					'description' => _x( 'Configure options to optimize SEO indexing on any page that includes filters.', '[Admin] Tab description', 'yith-woocommerce-ajax-navigation' ),
+					'icon'        => '<svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
+</svg>',
+				),
 			);
 
 			if ( isset( $_GET['tab'] ) && 'legacy' === $_GET['tab'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -221,27 +235,31 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 				defined( 'YITH_WCAN_PREMIUM_INIT' ) ? array( 'doc_url' => 'https://docs.yithemes.com/yith-woocommerce-ajax-product-filter/' ) : array()
 			);
 
-			$args = array_merge(
-				array(
-					'create_menu_page'   => true,
-					'parent_slug'        => '',
-					'page_title'         => 'YITH WooCommerce Ajax Product Filter',
-					'menu_title'         => 'Ajax Product Filter',
-					'plugin_description' => _x( 'It allows your users to find the product they are looking for as quickly as possible.', '[Admin] Plugin description', 'yith-woocommerce-ajax-navigation' ),
-					'capability'         => apply_filters( 'yith_wcan_panel_capability', 'manage_woocommerce' ),
-					'parent'             => '',
-					'class'              => function_exists( 'yith_set_wrapper_class' ) ? yith_set_wrapper_class() : '',
-					'parent_page'        => 'yit_plugin_panel',
-					'admin-tabs'         => apply_filters( 'yith_wcan_settings_tabs', $admin_tabs ),
-					'options-path'       => YITH_WCAN_DIR . '/plugin-options',
-					'plugin_slug'        => YITH_WCAN_SLUG,
-					'plugin-url'         => YITH_WCAN_URL,
-					'is_extended'        => defined( 'YITH_WCAN_EXTENDED' ),
-					'is_premium'         => defined( 'YITH_WCAN_PREMIUM' ),
-					'page'               => $this->panel_page,
-					'help_tab'           => $help_tab,
-				),
-				! defined( 'YITH_WCAN_PREMIUM' ) ? array( 'premium_tab' => $premium_tab ) : array()
+			$args = apply_filters(
+				'yith_wcan_panel_args',
+				array_merge(
+					array(
+						'create_menu_page'   => true,
+						'parent_slug'        => '',
+						'ui_version'         => 2,
+						'page_title'         => 'YITH WooCommerce Ajax Product Filter',
+						'menu_title'         => 'Ajax Product Filter',
+						'plugin_description' => _x( 'It allows your users to find the product they are looking for as quickly as possible.', '[Admin] Plugin description', 'yith-woocommerce-ajax-navigation' ),
+						'capability'         => apply_filters( 'yith_wcan_panel_capability', 'manage_woocommerce' ),
+						'parent'             => '',
+						'class'              => function_exists( 'yith_set_wrapper_class' ) ? yith_set_wrapper_class() : '',
+						'parent_page'        => 'yit_plugin_panel',
+						'admin-tabs'         => apply_filters( 'yith_wcan_settings_tabs', $admin_tabs ),
+						'options-path'       => YITH_WCAN_DIR . '/plugin-options',
+						'plugin_slug'        => YITH_WCAN_SLUG,
+						'plugin-url'         => YITH_WCAN_URL,
+						'is_extended'        => defined( 'YITH_WCAN_EXTENDED' ),
+						'is_premium'         => defined( 'YITH_WCAN_PREMIUM' ),
+						'page'               => $this->panel_page,
+						'help_tab'           => $help_tab,
+					),
+					! defined( 'YITH_WCAN_PREMIUM' ) ? array( 'premium_tab' => $premium_tab ) : array()
+				)
 			);
 
 			$this->panel = new YIT_Plugin_Panel_WooCommerce( $args );
@@ -255,7 +273,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 * @param string $tab  Tab slug.
 		 * @param array  $args Array of additional arguments.
 		 * @return string Panel url
-		 * @author Antonio La Rocca <antonio.larocca@yithemes.com>
 		 */
 		public function get_panel_url( $tab = '', $args = array() ) {
 			$args = array_merge(
@@ -322,7 +339,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 * Return true if we're currently on preset new/edit page
 		 *
 		 * @return bool Whether current screen is preset new/edit page
-		 * @author Antonio La Rocca <antonio.larocca@yithemes.com>
 		 */
 		public function is_preset_detail_page() {
 			$action = isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : false; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -339,7 +355,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 *
 		 * @param array $args Array of arguments for the template.
 		 * @return void
-		 * @author Antonio La Rocca <antonio.larocca@yithemes.com>
 		 */
 		public function show_empty_content( $args = array() ) {
 			$args = wp_parse_args(
@@ -364,7 +379,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 * Prints "Edit existing preset/Create new preset" tab
 		 *
 		 * @return void
-		 * @author Antonio La Rocca <antonio.larocca@yithemes.com>
 		 */
 		public function preset_edit_tab() {
 			// phpcs:disable WordPress.Security.NonceVerification.Recommended
@@ -387,7 +401,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 * @param array $field Array of options for current template.
 		 *
 		 * @return void
-		 * @author Antonio La Rocca <antonio.larocca@yithemes.com>
 		 */
 		public function filter_terms_field( $field ) {
 			$id       = isset( $field['index'] ) ? $field['index'] : 0;
@@ -406,7 +419,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 * @param string $term_options Options for current term (it may include label, tooltip, colors, and image).
 		 *
 		 * @return void
-		 * @author Antonio La Rocca <antonio.larocca@yithemes.com>
 		 */
 		public function filter_term_field( $id, $term_id, $term_name, $term_options = array() ) {
 			// just include template, and provide passed terms.
@@ -419,7 +431,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 * Echoes a json formatted list of terms for a specific taxonomy
 		 *
 		 * @return void
-		 * @author Antonio La Rocca <antonio.larocca@yithemes.com>
 		 */
 		public function json_search_term() {
 			check_ajax_referer( 'search_term', 'security' );
@@ -517,7 +528,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 *
 		 * @return   mixed Array
 		 * @use      plugin_action_links_{$plugin_file_name}
-		 * @author   Andrea Grillo <andrea.grillo@yithemes.com>
 		 * @since    1.0
 		 */
 		public function action_links( $links ) {
@@ -538,7 +548,6 @@ if ( ! class_exists( 'YITH_WCAN_Admin' ) ) {
 		 *
 		 * @return   array
 		 * @since    1.0
-		 * @author   Andrea Grillo <andrea.grillo@yithemes.com>
 		 * @use      plugin_row_meta
 		 */
 		public function plugin_row_meta( $new_row_meta_args, $plugin_meta, $plugin_file, $plugin_data, $status, $init_file = 'YITH_WCAN_INIT' ) {

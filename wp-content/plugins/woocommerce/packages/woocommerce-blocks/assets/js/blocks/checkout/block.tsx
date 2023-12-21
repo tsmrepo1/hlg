@@ -4,15 +4,16 @@
 import { __ } from '@wordpress/i18n';
 import classnames from 'classnames';
 import { createInterpolateElement, useEffect } from '@wordpress/element';
-import { useStoreCart } from '@woocommerce/base-context/hooks';
+import {
+	useStoreCart,
+	useShowShippingTotalWarning,
+} from '@woocommerce/base-context/hooks';
 import { CheckoutProvider, noticeContexts } from '@woocommerce/base-context';
 import BlockErrorBoundary from '@woocommerce/base-components/block-error-boundary';
 import { SidebarLayout } from '@woocommerce/base-components/sidebar-layout';
 import { CURRENT_USER_IS_ADMIN, getSetting } from '@woocommerce/settings';
-import {
-	SlotFillProvider,
-	StoreNoticesContainer,
-} from '@woocommerce/blocks-checkout';
+import { StoreNoticesContainer } from '@woocommerce/blocks-components';
+import { SlotFillProvider } from '@woocommerce/blocks-checkout';
 import withScrollToTop from '@woocommerce/base-hocs/with-scroll-to-top';
 import { useDispatch, useSelect } from '@wordpress/data';
 import {
@@ -161,6 +162,7 @@ const Block = ( {
 	children: React.ReactChildren;
 	scrollToTop: ( props: Record< string, unknown > ) => void;
 } ): JSX.Element => {
+	useShowShippingTotalWarning();
 	return (
 		<BlockErrorBoundary
 			header={ __(
@@ -183,7 +185,9 @@ const Block = ( {
 			) }
 			showErrorMessage={ CURRENT_USER_IS_ADMIN }
 		>
-			<StoreNoticesContainer context={ noticeContexts.CHECKOUT } />
+			<StoreNoticesContainer
+				context={ [ noticeContexts.CHECKOUT, noticeContexts.CART ] }
+			/>
 			{ /* SlotFillProvider need to be defined before CheckoutProvider so fills have the SlotFill context ready when they mount. */ }
 			<SlotFillProvider>
 				<CheckoutProvider>

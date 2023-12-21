@@ -148,7 +148,7 @@
                         + '</a>';
                 }
                 if ( settings.print_button == true ) {
-                    text += '<a href="Print" class="print_button">Print</a>';
+                    text += '<a href="Print" class="print_button">'+settings.print_button_text+'</a>';
                 }
                 return text;
             }
@@ -385,6 +385,7 @@
                     align:      'right' 			// align text: 'right', 'left', 'center'
                 },
                 print_button: false,                // show print button for popup
+                print_button_text: 'Print',         // print button text
                 close_with:     [
                     'overlay',         				// popup will be closed if catch click on overlay
                     'x_button', 	   				// popup will be closed if catch click on x button

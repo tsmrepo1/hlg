@@ -126,6 +126,8 @@ class TInvWL_Public_Wishlist_View {
 		add_action( 'tinvwl_after_wishlist_table', array( $this, 'get_per_page' ) );
 
 		TInvWL_Public_Wishlist_Buttons::init( $this->_name );
+
+		add_action( 'tinvwl_before_wishlist_template', array( $this, 'refresh_wishlist_after_action' ) );
 	}
 
 	/**
@@ -202,7 +204,7 @@ class TInvWL_Public_Wishlist_View {
 		// override global product data.
 		$product = $_product;
 		if ( apply_filters( 'tinvwl_product_add_to_cart_need_redirect', false, $product, $product->get_permalink(), $wl_product )
-		     && in_array( $product->get_type(), array(
+			 && in_array( $product->get_type(), array(
 				'variable',
 				'variable-subscription',
 			) ) ) {
@@ -331,7 +333,7 @@ class TInvWL_Public_Wishlist_View {
 	 * @return boolean
 	 */
 	function product_allow_add_to_cart( $allow, $wlproduct, $product ) {
-		if ( ! $allow ) {
+		if ( ! $allow || 'variable' === $product->get_type() ) {
 			return false;
 		}
 
@@ -345,7 +347,6 @@ class TInvWL_Public_Wishlist_View {
 		if ( is_page( apply_filters( 'wpml_object_id', tinv_get_option( 'page', 'wishlist' ), 'page', true ) ) ) {
 			$wishlist = $this->get_current_wishlist();
 			if ( $wishlist && 0 < $wishlist['ID'] ) {
-				$this->wishlist_url = tinv_url_wishlist( $wishlist['share_key'] );
 				if ( 'private' !== $wishlist['status'] && tinv_get_option( 'social', 'facebook' ) ) {
 					if ( is_user_logged_in() ) {
 						$user = get_user_by( 'id', $wishlist['author'] );
@@ -440,6 +441,9 @@ class TInvWL_Public_Wishlist_View {
 		if ( 'private' === $wishlist['status'] && ! $wishlist['is_owner'] ) {
 			return $this->wishlist_null();
 		}
+
+		$this->wishlist_url = tinv_url_wishlist( $wishlist['share_key'] );
+
 		if ( 'default' !== $wishlist['type'] && ! tinv_get_option( 'general', 'multi' ) ) {
 			if ( $wishlist['is_owner'] ) {
 				printf( '<p><a href="%s">%s</p><script type="text/javascript">window.location.href="%s"</script>', esc_attr( tinv_url_wishlist_default() ), esc_html__( 'Return to Wishlist', 'ti-woocommerce-wishlist' ), esc_attr( tinv_url_wishlist_default() ) );
@@ -467,7 +471,9 @@ class TInvWL_Public_Wishlist_View {
 				unset( $products[ $key ] );
 			}
 		}
-
+		if ( ! ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
+			do_action( 'tinvwl_before_wishlist_template', $wishlist );
+		}
 		if ( empty( $products ) ) {
 
 			$this->pages = 0;
@@ -640,5 +646,39 @@ class TInvWL_Public_Wishlist_View {
 				'name' => 'lists_per_page',
 			), $this->lists_per_page );
 		}
+	}
+
+	/**
+	 * Outputs the script for refreshing wishlist.
+	 */
+	public function refresh_wishlist_after_action( $wishlist ) {
+
+		if ( ! $wishlist['is_owner'] ) {
+			return false;
+		}
+
+		?>
+		<script type="text/javascript">
+			jQuery(document).ready(function ($) {
+				// Generate a unique hash key for localStorage
+				var hash_key = tinvwl_add_to_wishlist.hash_key + '_refresh';
+
+				if (localStorage.getItem(hash_key) && '<?php echo $wishlist['share_key'] ?>' === localStorage.getItem(hash_key)) {
+					localStorage.setItem(hash_key, '');
+				}
+
+				// Refresh the wishlist when storage changes in another tab
+				$(window).on('storage', function (e) {
+					if (
+						e.originalEvent.key === hash_key &&
+						'<?php echo $wishlist['share_key'] ?>' === e.originalEvent.newValue
+					) {
+						// Call the function to refresh the wishlist data
+						$.fn.tinvwl_get_wishlist_data('refresh');
+					}
+				});
+			});
+		</script>
+		<?php
 	}
 }

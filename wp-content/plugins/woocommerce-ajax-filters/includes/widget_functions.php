@@ -176,11 +176,14 @@ class BeRocket_AAPF_Widget_functions {
         global $wpdb;
         $options = BeRocket_AAPF::get_aapf_option();
         $use_filters = braapf_filters_must_be_recounted();
-        $taxonomy_data = BeRocket_AAPF_faster_attribute_recount::get_query_for_calculate(array(
+        $taxonomy_data = array(
             'use_filters' => $use_filters,
             'taxonomy_remove' => 'bapf_price'
-        ));
-        $query = $taxonomy_data['query'];
+        );
+        $new_taxonomy_data = BeRocket_AAPF_faster_attribute_recount::get_query_for_calculate($taxonomy_data);
+        $query = $new_taxonomy_data['query'];
+        unset($new_taxonomy_data['query']);
+        $taxonomy_data = array_merge($taxonomy_data, $new_taxonomy_data);
         $query['select']['elements'] = array(
             'min_price' => "MIN(cast(FLOOR(bapf_custom_price.min_price) as decimal)) as min_price",
             'min_float' => "MIN(bapf_custom_price.min_price) as min_float",
@@ -198,7 +201,7 @@ class BeRocket_AAPF_Widget_functions {
             foreach($price_ranges as $price_range) {
                 $from = isset($price_range['real_from']) ? $price_range['real_from'] : $price_range['from'];
                 $to = isset($price_range['real_to']) ? $price_range['real_to'] : $price_range['to'];
-                $case_values[] = "WHEN bapf_custom_price.min_price >= {$from} and bapf_custom_price.max_price <= {$to} THEN '{$price_range['from']}-{$price_range['to']}'";
+                $case_values[] = "WHEN bapf_custom_price.min_price >= {$from} and bapf_custom_price.max_price < {$to} THEN '{$price_range['from']}-{$price_range['to']}'";
             }
             $query['select']['elements']['price_range'] = "CASE ". implode(" ", $case_values). " END price_range";
             $query['select']['elements']['price_range_count'] = "count(distinct($wpdb->posts.ID)) as product_count";
@@ -502,7 +505,10 @@ class BeRocket_AAPF_Widget_functions {
     }
     public static function get_terms_for_filter($br_filter) {
         $args = self::get_current_terms_args($br_filter);
-        $terms = berocket_aapf_get_terms( $args, array('hierarchical' => true, 'disable_recount' => true, 'disable_hide_empty' => true) );
+        $terms = apply_filters('bapf_widget_get_terms_for_filter', false, $br_filter, $args);
+        if( $terms === false ) {
+            $terms = berocket_aapf_get_terms( $args, array('hierarchical' => true, 'disable_recount' => true, 'disable_hide_empty' => true) );
+        }
         return $terms;
     }
     public static function get_current_terms_args($br_filter) {

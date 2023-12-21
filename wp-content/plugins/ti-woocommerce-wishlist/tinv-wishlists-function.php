@@ -158,6 +158,11 @@ class TInvWLRename {
 	private function translation_update( $text, $domain ) {
 		if ( 'ti-woocommerce-wishlist' === $domain ) {
 
+			if ( strpos( $text, '{wishlist_title}' ) !== false ) {
+				// If $text contains "{wishlist_title}", skip the replacement
+				return $text;
+			}
+
 			$translations = [
 				'wishlist' => [
 					$this->rename_single,
@@ -766,7 +771,7 @@ if ( ! function_exists( 'tinvwl_meta_validate_cart_add' ) ) {
 				$redirect = false;
 			}
 
-			TInvWL_Public_Cart::unprepare_post();
+			TInvWL_Public_Cart::unprepare_post( $wl_product );
 		}
 
 		return $redirect;
@@ -800,6 +805,17 @@ if ( ! function_exists( 'tinv_wishlist_print_meta' ) ) {
 			if ( array_key_exists( $field, $meta ) ) {
 				unset( $meta[ $field ] );
 			}
+		}
+		if ( array_key_exists( 'tinvwl-hidden-fields', $meta ) ) {
+			$hiddenFields = json_decode( $meta['tinvwl-hidden-fields'], true );
+			if ( $hiddenFields !== null ) {
+				foreach ( $hiddenFields as $hiddenKey ) {
+					if ( isset( $meta[ $hiddenKey ] ) ) {
+						unset( $meta[ $hiddenKey ] );
+					}
+				}
+			}
+			unset( $meta['tinvwl-hidden-fields'] );
 		}
 		$meta = array_filter( $meta );
 		if ( empty( $meta ) ) {
@@ -870,7 +886,7 @@ if ( ! function_exists( 'tinvwl_add_to_cart_item_meta_post' ) ) {
 	/**
 	 * Save post data to cart item
 	 *
-	 * @param array $cart_item_data Array with cart imet information.
+	 * @param array $cart_item_data Array with cart item information.
 	 * @param string $cart_item_key Cart item key.
 	 *
 	 * @return array
@@ -878,7 +894,7 @@ if ( ! function_exists( 'tinvwl_add_to_cart_item_meta_post' ) ) {
 	function tinvwl_add_to_cart_item_meta_post( $cart_item_data, $cart_item_key ) {
 		$postdata = $_POST; // @codingStandardsIgnoreLine WordPress.VIP.SuperGlobalInputUsage.AccessDetected
 
-		$postdata = apply_filters( 'tinvwl_product_prepare_meta', $postdata );
+		$postdata = apply_filters( 'tinvwl_product_prepare_meta', $postdata, $cart_item_data['product_id'], $cart_item_data['variation_id'] );
 
 		if ( array_key_exists( 'variation_id', $postdata ) && ! empty( $postdata['variation_id'] ) ) {
 			foreach ( $postdata as $key => $field ) {
@@ -914,31 +930,13 @@ if ( ! function_exists( 'tinvwl_set_utm' ) ) {
 	function tinvwl_set_utm() {
 
 		// Set a source.
-		$source = get_option( TINVWL_PREFIX . '_utm_source' );
-		if ( ! $source || $source !== defined( 'TINVWL_PARTNER' ) ) {
-			$source = defined( 'TINVWL_PARTNER' ) ? TINVWL_PARTNER : 'wordpress_org';
-			update_option( TINVWL_PREFIX . '_utm_source', $source );
-		}
-
-		define( 'TINVWL_UTM_SOURCE', $source );
+		define( 'TINVWL_UTM_SOURCE', 'wordpress_org' );
 
 		// Set a medium.
-		$medium = get_option( TINVWL_PREFIX . '_utm_medium' );
-		if ( ! $medium || ( 'organic' === $medium && defined( 'TINVWL_PARTNER' ) ) ) {
-			$medium = defined( 'TINVWL_PARTNER' ) ? 'integration' : 'organic';
-			update_option( TINVWL_PREFIX . '_utm_medium', $medium );
-		}
-
-		define( 'TINVWL_UTM_MEDIUM', $medium );
+		define( 'TINVWL_UTM_MEDIUM', 'organic' );
 
 		// Set a campaign.
-		$campaign = get_option( TINVWL_PREFIX . '_utm_campaign' );
-		if ( ! $campaign || $campaign !== defined( 'TINVWL_CAMPAIGN' ) ) {
-			$campaign = defined( 'TINVWL_PARTNER' ) ? ( defined( 'TINVWL_CAMPAIGN' ) ? TINVWL_CAMPAIGN : TINVWL_PARTNER ) : 'organic';
-			update_option( TINVWL_PREFIX . '_utm_campaign', $campaign );
-		}
-
-		define( 'TINVWL_UTM_CAMPAIGN', $campaign );
+		define( 'TINVWL_UTM_CAMPAIGN', 'organic' );
 	}
 } // End if().
 
@@ -1017,6 +1015,18 @@ if ( ! function_exists( 'wc_is_attribute_in_product_name' ) ) {
 	}
 }
 
+add_action( 'admin_init', 'tinvwl_handle_external_redirects', 9 );
+
+function tinvwl_handle_external_redirects() {
+	if ( empty( $_GET['page'] ) ) {
+		return;
+	}
+	if ( 'tinvwl-upgrade' === $_GET['page'] ) {
+		wp_redirect( 'https://templateinvaders.com/product/ti-woocommerce-wishlist-wordpress-plugin/?utm_source=' . TINVWL_UTM_SOURCE . '&utm_campaign=' . TINVWL_UTM_CAMPAIGN . '&utm_medium=' . TINVWL_UTM_MEDIUM . '&utm_content=wp_menu&partner=' . TINVWL_UTM_SOURCE );
+		die;
+	}
+}
+
 add_action( 'init', function () {
 	if ( ! is_user_logged_in() ) {
 		add_filter( 'nonce_user_logged_out', function ( $uid, $action = - 1 ) {
@@ -1028,3 +1038,49 @@ add_action( 'init', function () {
 		}, 99, 2 );
 	}
 } );
+
+/**
+ * Get message placeholders for the add-to-wishlist message.
+ *
+ * @param string $string The message string to replace placeholders.
+ * @param WC_Product|null $product (Optional) The product to get the message placeholders for.
+ * @param array|null $wishlist (Optional) The wishlist to get the message placeholders for.
+ *
+ * @return string The message string with replaced placeholders.
+ */
+function tinvwl_message_placeholders( string $string, ?WC_Product $product = null, ?array $wishlist = null ): string {
+	$placeholders = [];
+
+	if ( $product instanceof WC_Product ) {
+		$placeholders['{product_name}'] = is_callable( [ $product, 'get_name' ] )
+			? $product->get_name()
+			: $product->get_title();
+		$placeholders['{product_sku}']  = $product->get_sku();
+	}
+
+	if ( is_array( $wishlist ) ) {
+		$wishlist_title                   = empty( $wishlist['title'] )
+			? apply_filters( 'tinvwl_default_wishlist_title', tinv_get_option( 'general', 'default_title' ) )
+			: $wishlist['title'];
+		$placeholders['{wishlist_title}'] = $wishlist_title;
+	}
+
+	/**
+	 * Filters the message placeholders for the add-to-wishlist message.
+	 *
+	 * @param array $placeholders The message placeholders.
+	 * @param WC_Product|null $product The product to get the message placeholders for.
+	 * @param array|null $wishlist The wishlist to get the message placeholders for.
+	 */
+	$placeholders = apply_filters( 'tinvwl_addtowishlist_message_placeholders', $placeholders, $product, $wishlist );
+
+	$find    = array_keys( $placeholders );
+	$replace = array_values( $placeholders );
+
+	return str_replace( $find, $replace, $string );
+}
+
+// Declare scheduled hooks
+add_action( 'tinvwl_flush_rewrite_rules', 'TInvWL_Public_TInvWL::apply_rewrite_rules' );
+add_action( 'tinvwl_disable_notifications_event', 'TInvWL_Admin_Notices::disable_notifications' );
+add_action( 'tinvwl_remove_without_author_wishlist', 'TInvWL_Admin_TInvWL::remove_old_wishlists' );

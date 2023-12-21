@@ -125,13 +125,14 @@ if( ! class_exists( 'berocket_information_notices' ) ) {
                 $notice['righthtml'] = 
                 '<form class="berocket_subscribe_form" method="POST" action="' . admin_url( 'admin-ajax.php' ) . '">
                     <input type="hidden" name="berocket_action" value="berocket_subscribe_email">
+                    <input type="hidden" name="wp_nonce" value="' . wp_create_nonce('berocket_subscribe_email') . '">
                     <input class="berocket_subscribe_email" type="email" name="email" value="' . $user_email . '">
                     <input type="submit" class="button-primary button berocket_notice_submit" value="Subscribe">
                 </form>' . $notice['righthtml'];
                 $notice['rightwidth'] += 300;
             }
             echo '
-                <div class="notice berocket_admin_notice berocket_admin_notice_', self::$notice_index, '" data-notice=\'', json_encode($notice_data), '\'>',
+                <div class="notice berocket_admin_notice berocket_admin_notice_', self::$notice_index, '" data-notice=\'', json_encode($notice_data), '\' data-nonce="' . wp_create_nonce('berocket_information_close_notice') . '">',
                     ( empty($notice['image']['local']) ? '' : '<img class="berocket_notice_img" src="' . $notice['image']['local'] . '">' ),
                     ( empty($notice['righthtml']) ? '' :
                     '<div class="berocket_notice_right_content">
@@ -230,7 +231,8 @@ if( ! class_exists( 'berocket_information_notices' ) ) {
                     jQuery(document).on("click", ".berocket_admin_notice.berocket_admin_notice_', self::$notice_index, ' .berocket_no_thanks", function(event){
                         event.preventDefault();
                         var notice = jQuery(this).parents(".berocket_admin_notice.berocket_admin_notice_', self::$notice_index, '").data("notice");
-                        jQuery.post(ajaxurl, {action:"berocket_information_close_notice", notice:notice}, function(data){});
+                        var nonce = jQuery(this).parents(".berocket_admin_notice.berocket_admin_notice_', self::$notice_index, '").data("nonce");
+                        jQuery.post(ajaxurl, {action:"berocket_information_close_notice", notice:notice, wp_nonce:nonce}, function(data){});
                         jQuery(this).parents(".berocket_admin_notice.berocket_admin_notice_', self::$notice_index, '").hide();
                     });
                 });';
@@ -239,7 +241,8 @@ if( ! class_exists( 'berocket_information_notices' ) ) {
             berocket_admin_notices::echo_jquery_functions();
         }
         public static function close_notice($notice = FALSE) {
-            if ( ! ( current_user_can( 'manage_options' ) ) ) {
+            $wp_nonce = ( empty($_POST['wp_nonce']) ? '' : $_POST['wp_nonce'] );
+            if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $wp_nonce, 'berocket_information_close_notice' ) ) {
                 echo __( 'Do not have access for this feature', 'BeRocket_domain' );
                 wp_die();
             }

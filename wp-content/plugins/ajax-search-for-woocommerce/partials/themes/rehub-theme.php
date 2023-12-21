@@ -4,11 +4,6 @@ if ( ! defined( 'DGWT_WCAS_FILE' ) ) {
 	exit;
 }
 
-// Change mobile breakpoint
-add_filter( 'dgwt/wcas/scripts/mobile_breakpoint', function () {
-	return 1024;
-} );
-
 add_action( 'wp_footer', function () {
 	echo '<div id="wcas-search-instance" style="display: block;">' . do_shortcode( '[wcas-search-form layout="classic" mobile_overlay="1" mobile_breakpoint="1024" ]' ) . '</div>';
 	echo '<div id="wcas-search-icon-instance" style="display: block;">' . do_shortcode( '[wcas-search-form layout="classic" mobile_overlay="1" mobile_breakpoint="1024" ]' ) . '</div>';
@@ -36,13 +31,13 @@ add_action( 'wp_footer', function () {
 						setTimeout(function () {
 							var $input = $('.search-header-contents .dgwt-wcas-search-input');
 							if ($input.length > 0) {
-								$input.focus();
+								$input.trigger('focus');
 							}
 						}, 500);
 					} else {
 						var $mobile = $('.search-header-contents .js-dgwt-wcas-enable-mobile-form');
 						if ($mobile.length > 0) {
-							$mobile.click();
+							$mobile.trigger('click');
 
 							// Support for new version of search popup (version >= v16.2)
 							if (document.querySelector('#rhSplashSearch') !== null) {

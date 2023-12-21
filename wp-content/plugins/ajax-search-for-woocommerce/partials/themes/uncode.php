@@ -4,9 +4,8 @@ if ( ! defined( 'DGWT_WCAS_FILE' ) ) {
 	exit;
 }
 
-add_filter( 'dgwt/wcas/scripts/mobile_breakpoint', function () {
-	return 960;
-} );
+// Force the theme to use the default $wp_query on the search page.
+add_filter( 'uncode_use_legacy_search_query', '__return_true' );
 
 add_action( 'wp_footer', function () {
 	echo '<div id="wcas-desktop-search" style="display: none;">' . do_shortcode( '[wcas-search-form layout="icon"]' ) . '</div>';

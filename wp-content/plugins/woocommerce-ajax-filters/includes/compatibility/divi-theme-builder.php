@@ -10,7 +10,7 @@ if( ! class_exists('BeRocket_AAPF_compat_Divi_theme_builder') ) {
                 add_filter('braapf_check_widget_by_instance_single', array($this, 'disable_conditions'));
                 add_filter('braapf_check_widget_by_instance_group', array($this, 'disable_conditions'));
             }
-            if( br_get_value_from_array($_GET,'et_fb') == 1 ) {
+            if( br_get_value_from_array($_GET,'et_fb') == 1 || ( ! empty($_REQUEST['post_type']) && $_REQUEST['post_type'] == 'et_body_layout' ) ) {
                 add_action('wp_footer', array($this, 'apply_styles'));
             }
         }
@@ -92,6 +92,9 @@ if( ! class_exists('BeRocket_AAPF_compat_Divi_theme_builder') ) {
                         braapf_init_load();
                     }
                 }, 500);
+            });
+            jQuery(document).ajaxComplete( function() {
+                setTimeout(braapf_init_load, 100);
             });
             </script>
             <?php

@@ -4,7 +4,7 @@
 import { __ } from '@wordpress/i18n';
 import { useState } from '@wordpress/element';
 import type { UniqueIdentifier } from '@dnd-kit/core';
-import { isObject, isBoolean } from '@woocommerce/types';
+import { isBoolean } from '@woocommerce/types';
 import { ToggleControl, Button, ExternalLink } from '@wordpress/components';
 import styled from '@emotion/styled';
 
@@ -19,6 +19,7 @@ import {
 import EditLocation from './edit-location';
 import type { SortablePickupLocation } from './types';
 import { useSettingsContext } from './settings-context';
+import { getUserFriendlyAddress } from './utils';
 
 const LocationSettingsDescription = () => (
 	<>
@@ -29,7 +30,7 @@ const LocationSettingsDescription = () => (
 				'woo-gutenberg-products-block'
 			) }
 		</p>
-		<ExternalLink href="https://woocommerce.com/document/local-pickup/">
+		<ExternalLink href="https://woocommerce.com/document/woocommerce-blocks-local-pickup/">
 			{ __( 'Learn more', 'woo-gutenberg-products-block' ) }
 		</ExternalLink>
 	</>
@@ -62,10 +63,7 @@ const LocationSettings = () => {
 				<>
 					{ row.name }
 					<StyledAddress>
-						{ isObject( row.address ) &&
-							Object.values( row.address )
-								.filter( ( value ) => value !== '' )
-								.join( ', ' ) }
+						{ getUserFriendlyAddress( row.address ) }
 					</StyledAddress>
 				</>
 			),
@@ -137,7 +135,7 @@ const LocationSettings = () => {
 									address: {
 										address_1: '',
 										city: '',
-										state: '',
+										state: readOnlySettings.storeState,
 										postcode: '',
 										country: readOnlySettings.storeCountry,
 									},

@@ -13,6 +13,9 @@ import BlockErrorBoundary from '@woocommerce/base-components/block-error-boundar
 import { EditorProvider, CartProvider } from '@woocommerce/base-context';
 import { previewCart } from '@woocommerce/resource-previews';
 import { SlotFillProvider } from '@woocommerce/blocks-checkout';
+import { useEffect, useRef } from '@wordpress/element';
+import { getQueryArg } from '@wordpress/url';
+import { dispatch, select } from '@wordpress/data';
 
 /**
  * Internal dependencies
@@ -22,7 +25,6 @@ import './editor.scss';
 import {
 	addClassToBody,
 	useBlockPropsWithLocking,
-	useForcedLayout,
 	BlockSettings,
 } from '../cart-checkout-shared';
 import '../cart-checkout-shared/sidebar-notices';
@@ -38,22 +40,33 @@ const ALLOWED_BLOCKS = [
 	'woocommerce/empty-cart-block',
 ];
 
-export const Edit = ( { className, attributes, setAttributes, clientId } ) => {
-	const { hasDarkControls, currentView } = attributes;
+export const Edit = ( { clientId, className, attributes, setAttributes } ) => {
+	const { hasDarkControls, currentView, isPreview = false } = attributes;
 	const defaultTemplate = [
 		[ 'woocommerce/filled-cart-block', {}, [] ],
 		[ 'woocommerce/empty-cart-block', {}, [] ],
 	];
 	const blockProps = useBlockPropsWithLocking( {
 		className: classnames( className, 'wp-block-woocommerce-cart', {
-			'is-editor-preview': attributes.isPreview,
+			'is-editor-preview': isPreview,
 		} ),
 	} );
-	useForcedLayout( {
-		clientId,
-		registeredBlocks: ALLOWED_BLOCKS,
-		defaultTemplate,
-	} );
+
+	// This focuses on the block when a certain query param is found. This is used on the link from the task list.
+	const focus = useRef( getQueryArg( window.location.href, 'focus' ) );
+
+	useEffect( () => {
+		if (
+			focus.current === 'cart' &&
+			! select( 'core/block-editor' ).hasSelectedBlock()
+		) {
+			dispatch( 'core/block-editor' ).selectBlock( clientId );
+			dispatch( 'core/interface' ).enableComplementaryArea(
+				'core/edit-site',
+				'edit-site/block-inspector'
+			);
+		}
+	}, [ clientId ] );
 
 	return (
 		<div { ...blockProps }>
@@ -81,6 +94,7 @@ export const Edit = ( { className, attributes, setAttributes, clientId } ) => {
 				<EditorProvider
 					previewData={ { previewCart } }
 					currentView={ currentView }
+					isPreview={ isPreview }
 				>
 					<CartBlockContext.Provider
 						value={ {
@@ -92,7 +106,7 @@ export const Edit = ( { className, attributes, setAttributes, clientId } ) => {
 								<InnerBlocks
 									allowedBlocks={ ALLOWED_BLOCKS }
 									template={ defaultTemplate }
-									templateLock={ false }
+									templateLock="insert"
 								/>
 							</CartProvider>
 						</SlotFillProvider>

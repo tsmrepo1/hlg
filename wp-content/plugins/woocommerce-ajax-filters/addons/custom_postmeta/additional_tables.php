@@ -79,36 +79,36 @@ if( ! class_exists('BeRocket_aapf_variations_tables_postmeta_addon') ) {
                 'run' => true,
             ));
             global $wpdb;
-            $charset_collate = $instance->get_charset_collate();
+            $collate = $instance->get_charset_collate();
             require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
             //braapf_custom_post_meta table
             $table_name = $wpdb->prefix . 'braapf_custom_post_meta';
             $instance->reset_table($table_name);
             $sql = "CREATE TABLE $table_name (
-            meta_id bigint(20) NOT NULL AUTO_INCREMENT,
-            meta varchar(120) NOT NULL,
-            slug varchar(120) NOT NULL,
-            count bigint(20) DEFAULT '1',
-            name text NOT NULL,
-            INDEX meta_id (meta_id),
-            INDEX meta (meta),
-            INDEX slug (slug),
-            INDEX metaslug (meta, slug),
-            UNIQUE uniqueid (meta, slug)
-            ) $charset_collate;";
+    meta_id bigint(20) NOT NULL AUTO_INCREMENT,
+    meta varchar(120) NOT NULL,
+    slug varchar(120) NOT NULL,
+    count bigint(20) DEFAULT '1',
+    name text NOT NULL,
+    INDEX meta_id (meta_id),
+    INDEX meta (meta),
+    INDEX slug (slug),
+    INDEX metaslug (meta, slug),
+    UNIQUE KEY uniqueid (meta, slug)
+) $collate;";
             $query_status = dbDelta( $sql );
             $instance->save_query_error($sql, $query_status);
             //braapf_product_post_meta table
             $table_name = $wpdb->prefix . 'braapf_product_post_meta';
             $instance->reset_table($table_name);
             $sql = "CREATE TABLE $table_name (
-            meta_id bigint(20) NOT NULL,
-            product_id bigint(20) NOT NULL,
-            INDEX meta_id (meta_id),
-            INDEX product_id (product_id),
-            INDEX metaslug (meta_id, product_id),
-            UNIQUE uniqueid (meta_id, product_id)
-            ) $charset_collate;";
+    meta_id bigint(20) NOT NULL,
+    product_id bigint(20) NOT NULL,
+    INDEX meta_id (meta_id),
+    INDEX product_id (product_id),
+    INDEX metaslug (meta_id, product_id),
+    UNIQUE KEY uniqueid (meta_id, product_id)
+) $collate;";
             $query_status = dbDelta( $sql );
             $instance->save_query_error($sql, $query_status);
             //get_current post meta
@@ -279,6 +279,9 @@ if( ! class_exists('BeRocket_aapf_variations_tables_postmeta_addon') ) {
         }
         function save_filter($meta_id, $object_id, $meta_key, $meta_value) {
             $postmeta = get_option('berocket_aapf_custom_post_meta');
+            if( ! is_array($postmeta) ) {
+                $postmeta = array();
+            }
             if( $meta_key == 'br_product_filter' && ! empty($meta_value) && ! empty($meta_value['filter_type']) && $meta_value['filter_type'] == 'custom_postmeta' && ! empty($meta_value['custom_postmeta']) ) {
                 if( ! in_array($meta_value['custom_postmeta'], $postmeta) ) {
                     $postmeta[] = $meta_value['custom_postmeta'];

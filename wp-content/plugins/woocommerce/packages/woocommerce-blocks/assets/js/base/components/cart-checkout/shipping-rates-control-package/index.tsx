@@ -4,11 +4,11 @@
 import classNames from 'classnames';
 import { _n, sprintf } from '@wordpress/i18n';
 import { decodeEntities } from '@wordpress/html-entities';
-import type { ReactElement } from 'react';
-import { Panel } from '@woocommerce/blocks-checkout';
-import Label from '@woocommerce/base-components/label';
+import { Label, Panel } from '@woocommerce/blocks-components';
+import { useCallback } from '@wordpress/element';
 import { useShippingData } from '@woocommerce/base-context/hooks';
 import { sanitizeHTML } from '@woocommerce/utils';
+import type { ReactElement } from 'react';
 
 /**
  * Internal dependencies
@@ -26,7 +26,7 @@ export const ShippingRatesControlPackage = ( {
 	collapsible,
 	showItems,
 }: PackageProps ): ReactElement => {
-	const { selectShippingRate } = useShippingData();
+	const { selectShippingRate, isSelectingRate } = useShippingData();
 	const multiplePackages =
 		document.querySelectorAll(
 			'.wc-block-components-shipping-rates-control__package'
@@ -86,22 +86,35 @@ export const ShippingRatesControlPackage = ( {
 		</>
 	);
 
+	const onSelectRate = useCallback(
+		( newShippingRateId: string ) => {
+			selectShippingRate( newShippingRateId, packageId );
+		},
+		[ packageId, selectShippingRate ]
+	);
 	const packageRatesProps = {
 		className,
 		noResultsMessage,
 		rates: packageData.shipping_rates,
-		onSelectRate: ( newShippingRateId: string ) =>
-			selectShippingRate( newShippingRateId, packageId ),
+		onSelectRate,
 		selectedRate: packageData.shipping_rates.find(
 			( rate ) => rate.selected
 		),
 		renderOption,
+		disabled: isSelectingRate,
 	};
 
 	if ( shouldBeCollapsible ) {
 		return (
 			<Panel
-				className="wc-block-components-shipping-rates-control__package"
+				className={ classNames(
+					'wc-block-components-shipping-rates-control__package',
+					className,
+					{
+						'wc-block-components-shipping-rates-control__package--disabled':
+							isSelectingRate,
+					}
+				) }
 				// initialOpen remembers only the first value provided to it, so by the
 				// time we know we have several packages, initialOpen would be hardcoded to true.
 				// If we're rendering a panel, we're more likely rendering several
@@ -118,7 +131,11 @@ export const ShippingRatesControlPackage = ( {
 		<div
 			className={ classNames(
 				'wc-block-components-shipping-rates-control__package',
-				className
+				className,
+				{
+					'wc-block-components-shipping-rates-control__package--disabled':
+						isSelectingRate,
+				}
 			) }
 		>
 			{ header }

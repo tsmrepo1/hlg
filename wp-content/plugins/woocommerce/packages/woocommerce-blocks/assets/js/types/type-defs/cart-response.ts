@@ -178,6 +178,7 @@ export interface CartResponse {
 	fees: Array< CartResponseFeeItem >;
 	totals: CartResponseTotals;
 	errors: Array< CartResponseErrorItem >;
-	payment_requirements: Array< unknown >;
+	payment_methods: string[];
+	payment_requirements: string[];
 	extensions: ExtensionsData;
 }

@@ -187,11 +187,11 @@ class UserInterface
      */
     public function loadInterface()
     {
-        if ( !current_user_can( 'manage_options' ) ) {
+        if ( !current_user_can( ( Helpers::shopManagerHasAccess() ? 'manage_woocommerce' : 'manage_options' ) ) ) {
             wp_die( -1, 403 );
         }
         check_ajax_referer( self::LOAD_INTERFACE_NONCE );
-        $lang = ( !empty($_REQUEST['lang']) && Multilingual::isLangCode( $_REQUEST['lang'] ) ? sanitize_key( $_REQUEST['lang'] ) : '' );
+        $lang = ( !empty($_REQUEST['lang']) && Multilingual::isLangCode( sanitize_key( $_REQUEST['lang'] ) ) ? sanitize_key( $_REQUEST['lang'] ) : '' );
         $data = array(
             'html' => '',
         );
@@ -209,11 +209,11 @@ class UserInterface
      */
     public function loadMoreCriticalSearches()
     {
-        if ( !current_user_can( 'manage_options' ) ) {
+        if ( !current_user_can( ( Helpers::shopManagerHasAccess() ? 'manage_woocommerce' : 'manage_options' ) ) ) {
             wp_die( -1, 403 );
         }
         check_ajax_referer( self::LOAD_MORE_CRITICAL_SEARCHES_NONCE );
-        $lang = ( !empty($_REQUEST['lang']) && Multilingual::isLangCode( $_REQUEST['lang'] ) ? sanitize_key( $_REQUEST['lang'] ) : '' );
+        $lang = ( !empty($_REQUEST['lang']) && Multilingual::isLangCode( sanitize_key( $_REQUEST['lang'] ) ) ? sanitize_key( $_REQUEST['lang'] ) : '' );
         $offset = ( !empty($_REQUEST['loaded']) ? absint( $_REQUEST['loaded'] ) : 0 );
         $html = '';
         $data = new Data();
@@ -258,11 +258,11 @@ class UserInterface
      */
     public function loadMoreAutocomplete()
     {
-        if ( !current_user_can( 'manage_options' ) ) {
+        if ( !current_user_can( ( Helpers::shopManagerHasAccess() ? 'manage_woocommerce' : 'manage_options' ) ) ) {
             wp_die( -1, 403 );
         }
         check_ajax_referer( self::LOAD_MORE_AUTOCOMPLETE_NONCE );
-        $lang = ( !empty($_REQUEST['lang']) && Multilingual::isLangCode( $_REQUEST['lang'] ) ? sanitize_key( $_REQUEST['lang'] ) : '' );
+        $lang = ( !empty($_REQUEST['lang']) && Multilingual::isLangCode( sanitize_key( $_REQUEST['lang'] ) ) ? sanitize_key( $_REQUEST['lang'] ) : '' );
         // Autocomplete
         $data = new Data();
         if ( !empty($lang) ) {
@@ -290,11 +290,11 @@ class UserInterface
      */
     public function loadMoreSearchPage()
     {
-        if ( !current_user_can( 'manage_options' ) ) {
+        if ( !current_user_can( ( Helpers::shopManagerHasAccess() ? 'manage_woocommerce' : 'manage_options' ) ) ) {
             wp_die( -1, 403 );
         }
         check_ajax_referer( self::LOAD_MORE_SEARCH_PAGE_NONCE );
-        $lang = ( !empty($_REQUEST['lang']) && Multilingual::isLangCode( $_REQUEST['lang'] ) ? sanitize_key( $_REQUEST['lang'] ) : '' );
+        $lang = ( !empty($_REQUEST['lang']) && Multilingual::isLangCode( sanitize_key( $_REQUEST['lang'] ) ) ? sanitize_key( $_REQUEST['lang'] ) : '' );
         // Search page
         $data = new Data();
         if ( !empty($lang) ) {
@@ -322,7 +322,7 @@ class UserInterface
      */
     public function checkCriticalPhrase()
     {
-        if ( !current_user_can( 'manage_options' ) ) {
+        if ( !current_user_can( ( Helpers::shopManagerHasAccess() ? 'manage_woocommerce' : 'manage_options' ) ) ) {
             wp_die( -1, 403 );
         }
         check_ajax_referer( self::CRITICAL_CHECK_NONCE );
@@ -368,7 +368,7 @@ class UserInterface
      *
      * @return string
      */
-    public function getCriticalPhraseMessage( $context = '', $total = 0 )
+    public function getCriticalPhraseMessage( $context = '' )
     {
         $html = '';
         //This phrase returns X products.
@@ -377,12 +377,7 @@ class UserInterface
                 $html = '<p>';
                 $html .= '<b class="dgwt-wcas-analytics-text-good">' . __( "Perfect!", 'ajax-search-for-woocommerce' ) . '</b>';
                 $html .= ' ' . __( "It's sorted.", 'ajax-search-for-woocommerce' );
-                $html .= ' ' . sprintf( _n(
-                    "This phrase returns 1 product.",
-                    "This phrase returns %d products.",
-                    $total,
-                    'ajax-search-for-woocommerce'
-                ), $total );
+                $html .= ' ' . __( 'This phrase returns some results.', 'ajax-search-for-woocommerce' );
                 $html .= ' ' . __( 'Click the button below to remove this phrase from the list.', 'ajax-search-for-woocommerce' );
                 $html .= '<button class="button button-small dgwt-wcas-analytics-btn-mark js-dgwt-wcas-analytics-exclude-phrase"><span class="dashicons dashicons-yes"></span> ' . __( 'Mark this phrase as resolved', 'ajax-search-for-woocommerce' ) . '</button>';
                 $html .= '</p>';
@@ -415,7 +410,7 @@ class UserInterface
      */
     public function excludeCriticalPhrase()
     {
-        if ( !current_user_can( 'manage_options' ) ) {
+        if ( !current_user_can( ( Helpers::shopManagerHasAccess() ? 'manage_woocommerce' : 'manage_options' ) ) ) {
             wp_die( -1, 403 );
         }
         check_ajax_referer( self::EXCLUDE_CRITICAL_PHRASE_NONCE );
@@ -442,7 +437,7 @@ class UserInterface
      */
     public function resetStats()
     {
-        if ( !current_user_can( 'manage_options' ) ) {
+        if ( !current_user_can( ( Helpers::shopManagerHasAccess() ? 'manage_woocommerce' : 'manage_options' ) ) ) {
             wp_die( -1, 403 );
         }
         check_ajax_referer( self::RESET_STATS_NONCE );
@@ -457,7 +452,7 @@ class UserInterface
      */
     public function exportStats()
     {
-        if ( !current_user_can( 'manage_options' ) ) {
+        if ( !current_user_can( ( Helpers::shopManagerHasAccess() ? 'manage_woocommerce' : 'manage_options' ) ) ) {
             wp_die( -1, 403 );
         }
         check_ajax_referer( self::EXPORT_STATS_CSV_NONCE );
@@ -515,7 +510,7 @@ class UserInterface
         );
         $vars['autocomplete']['total-results-uniq'] = $vars['autocomplete']['total-with-results-uniq'] + $vars['autocomplete']['total-without-results-uniq'];
         $vars['autocomplete']['total-results'] = $vars['autocomplete']['total-with-results'] + $vars['autocomplete']['total-without-results'];
-        // Search page
+        // WooCommerce Search Results Page
         $data->setContext( 'search-results-page' );
         $vars['search-page'] = array(
             'with-results'               => $data->getPhrasesWithResults( self::TABLE_ROW_LIMIT_LIMIT ),
@@ -528,10 +523,10 @@ class UserInterface
         $vars['search-page']['total-results-uniq'] = $vars['search-page']['total-with-results-uniq'] + $vars['search-page']['total-without-results-uniq'];
         $vars['search-page']['total-results'] = $vars['search-page']['total-with-results'] + $vars['search-page']['total-without-results'];
         // Common
-        $vars['total'] = $vars['autocomplete']['total-results'] + $vars['search-page']['total-results'];
+        $vars['total'] = $vars['autocomplete']['total-results'];
         
         if ( $vars['total'] > 0 ) {
-            $vars['returning-results-percent'] = round( ($vars['autocomplete']['total-with-results'] + $vars['search-page']['total-with-results']) * 100 / $vars['total'] );
+            $vars['returning-results-percent'] = round( $vars['autocomplete']['total-with-results'] * 100 / $vars['total'] );
             $vars['returning-results-percent-satisfying'] = $data->isSearchesReturningResutlsSatisfying( $vars['returning-results-percent'] );
         }
         

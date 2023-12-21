@@ -4,15 +4,15 @@
 import { Button as WPButton } from 'wordpress-components';
 import type { Button as WPButtonType } from '@wordpress/components';
 import classNames from 'classnames';
-import Spinner from '@woocommerce/base-components/spinner';
 
 /**
  * Internal dependencies
  */
 import './style.scss';
+import Spinner from '../../../../../packages/components/spinner';
 
 export interface ButtonProps
-	extends Omit< WPButtonType.ButtonProps, 'variant' > {
+	extends Omit< WPButtonType.ButtonProps, 'variant' | 'href' > {
 	/**
 	 * Show spinner
 	 *
@@ -23,6 +23,10 @@ export interface ButtonProps
 	 * Button variant
 	 */
 	variant?: 'text' | 'contained' | 'outlined';
+	/**
+	 * The URL the button should link to.
+	 */
+	href?: string | undefined;
 }
 
 export interface AnchorProps extends Omit< ButtonProps, 'href' > {

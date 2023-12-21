@@ -139,12 +139,16 @@ class TInvWL_Public_AddToWishlist {
 					break;
 			}
 
-			add_filter( 'woocommerce_blocks_product_grid_item_html', array( $this, 'htmloutput_block' ), 9, 3 );
-			add_filter( 'woocommerce_product_get_description', array( $this, 'woocommerce_blocks' ), 10, 2 );
+
 		}
 
+		// WooCommerce Blocks
+		add_filter( 'woocommerce_blocks_product_grid_item_html', array( $this, 'htmloutput_block' ), 9, 3 );
+		add_filter( 'woocommerce_product_get_description', array( $this, 'woocommerce_blocks_all_products' ), 10, 2 );
+		add_action( 'init', array( $this, 'woocommerce_blocks' ) );
+
 		add_action( 'wp_loaded', array( $this, 'add_to_wishlist' ), 0 );
-		if ( is_user_logged_in() ) {
+		if ( is_user_logged_in() && apply_filters( 'tinvwl_allow_data_cookies', true ) ) {
 			add_action( 'init', array( $this, 'set_wishlists_data_cookies' ) );
 		}
 	}
@@ -386,27 +390,14 @@ class TInvWL_Public_AddToWishlist {
 		if ( $post['original_product_id'] && $post['product_id'] !== $post['original_product_id'] ) {
 			$original_product = wc_get_product( $post['original_product_id'] );
 		}
-		if ( $original_product ) {
-			$msg_placeholders = apply_filters( 'tinvwl_addtowishlist_message_placeholders',
-				array(
-					'{product_name}' => is_callable( array(
-						$original_product,
-						'get_name'
-					) ) ? $original_product->get_name() : $original_product->get_title(),
-					'{product_sku}'  => $original_product->get_sku(),
-				),
-				$original_product
-			);
 
-			$find    = array_keys( $msg_placeholders );
-			$replace = array_values( $msg_placeholders );
-		}
 		if ( ! empty( $data['msg'] ) ) {
 			if ( $original_product ) {
-				$data['msg'] = str_replace( $find, $replace, $data['msg'] );
+				$data['msg'] = tinvwl_message_placeholders( $data['msg'], $original_product, $wishlist );
 			}
-			$data['msg'] = apply_filters( 'tinvwl_addtowishlist_message_after', $data['msg'], $data, $post, $form, $product );
-			$data['msg'] = tinv_wishlist_template_html( 'ti-addedtowishlist-dialogbox.php', apply_filters( 'tinvwl_addtowishlist_dialog_box', $data, $post ) );
+			$data['msg']      = apply_filters( 'tinvwl_addtowishlist_message_after', $data['msg'], $data, $post, $form, $product );
+			$data['wishlist'] = $wishlist;
+			$data['msg']      = tinv_wishlist_template_html( 'ti-addedtowishlist-dialogbox.php', apply_filters( 'tinvwl_addtowishlist_dialog_box', $data, $post ) );
 		}
 		if ( ! tinv_get_option( 'general', 'show_notice' ) && array_key_exists( 'msg', $data ) ) {
 			unset( $data['msg'] );
@@ -422,7 +413,7 @@ class TInvWL_Public_AddToWishlist {
 		if ( ! is_user_logged_in() ) {
 			$share_key = $wishlist['share_key'];
 		}
-
+		$data['action']         = 'add_to_wishlist';
 		$data['wishlists_data'] = $this->get_wishlists_data( $share_key );
 		$data                   = apply_filters( 'tinvwl_addtowishlist_return_ajax', $data, $post, $form, $product );
 		ob_clean();
@@ -578,6 +569,11 @@ JOIN {$table_languages} l ON
 				foreach ( $wishlists as $wishlist ) {
 
 					foreach ( $results as $product ) {
+
+						if ( (int) $wishlist['ID'] !== (int) $product['wishlist_id'] ) {
+							continue;
+						}
+
 						if ( array_key_exists( $product['product_id'], $products ) ) {
 							$products[ $product['product_id'] ][ $wishlist['ID'] ]['in'][] = (int) $product['variation_id'];
 						} else {
@@ -787,18 +783,9 @@ JOIN {$table_languages} l ON
 	 *
 	 */
 	function htmloutput( $attr = array(), $is_shortcode = false ) {
-		global $product, $post;
-
-		$attr     = apply_filters( 'tinvwl_addtowishlist_out_prepare_attr', $attr );
-		$_product = $product;
-		if ( empty( $product ) && ! empty( $post ) && 'product' === $post->post_type ) {
-			$_product = wc_get_product( $post->ID );
-		}
-
-		$this->product = apply_filters( 'tinvwl_addtowishlist_out_prepare_product', $_product );
-
-		$position = tinv_get_option( 'add_to_wishlist', 'position' );
-
+		$attr = apply_filters( 'tinvwl_addtowishlist_out_prepare_attr', $attr );
+		//is shortcode
+		$this->variation_id = null;
 		if ( $is_shortcode ) {
 			$position = 'shortcode';
 
@@ -818,13 +805,28 @@ JOIN {$table_languages} l ON
 			} else {
 				return false;
 			}
+		} else {
+
+			global $product, $post;
+
+			$_product = $product;
+			if ( empty( $product ) && ! empty( $post ) && 'product' === $post->post_type ) {
+				$_product = wc_get_product( $post->ID );
+			}
+
+			$this->product = apply_filters( 'tinvwl_addtowishlist_out_prepare_product', $_product );
+
+			$position = $this->is_loop ? tinv_get_option( 'add_to_wishlist_catalog', 'position' ) : tinv_get_option( 'add_to_wishlist', 'position' );
+
 		}
 
 		if ( empty( $this->product ) || ! ( $this->product instanceof WC_Product ) || ! apply_filters( 'tinvwl_allow_addtowishlist_single_product', true, $this->product ) ) {
 			return false;
 		}
 
-		add_action( 'tinvwl_wishlist_addtowishlist_button', array( $this, 'button' ) );
+		if ( isset( $variation_id ) ) {
+			$this->variation_id = $variation_id;
+		}
 
 		if ( $this->is_loop && in_array( $this->product->get_type(), array(
 				'variable',
@@ -832,7 +834,6 @@ JOIN {$table_languages} l ON
 			) ) ) {
 
 			$this->variation_ids = array();
-
 
 			if ( ! tinv_get_option( 'general', 'simple_flow' ) ) {
 				foreach ( $this->product->get_children() as $oid ) {
@@ -844,26 +845,32 @@ JOIN {$table_languages} l ON
 
 			$this->variation_ids = apply_filters( 'tinvwl_wishlist_addtowishlist_button_variation_ids', $this->variation_ids, $this );
 
-			$this->variation_id = 0;
-			$match_attributes   = array();
+			if ( ! isset( $this->variation_id ) ) {
+				$this->variation_id = 0;
+				$match_attributes   = array();
 
-			foreach ( $this->product->get_default_attributes() as $attribute_name => $value ) {
-				$match_attributes[ 'attribute_' . sanitize_title( $attribute_name ) ] = $value;
-			}
+				foreach ( $this->product->get_default_attributes() as $attribute_name => $value ) {
+					$match_attributes[ 'attribute_' . sanitize_title( $attribute_name ) ] = $value;
+				}
 
-			if ( $match_attributes ) {
+				if ( $match_attributes ) {
 
-				add_action( 'tinvwl_wishlist_addtowishlist_button', array( $this, 'default_variation_loop' ), 10, 2 );
+					add_action( 'tinvwl_wishlist_addtowishlist_button', array(
+						$this,
+						'default_variation_loop'
+					), 10, 2 );
 
-				$data_store         = WC_Data_Store::load( 'product' );
-				$this->variation_id = $data_store->find_matching_product_variation( $this->product, $match_attributes );
+					$data_store         = WC_Data_Store::load( 'product' );
+					$this->variation_id = $data_store->find_matching_product_variation( $this->product, $match_attributes );
+				}
 			}
 		}
+		add_action( 'tinvwl_wishlist_addtowishlist_button', array( $this, 'button' ) );
 
 		$action_class = current_action() ? ' tinvwl-' . current_action() : ' tinvwl-no-action';
 
 		$data = array(
-			'class_postion'       => sprintf( 'tinvwl-%s-add-to-cart', $this->is_loop ? tinv_get_option( 'add_to_wishlist_catalog', 'position' ) : $position ) . ( $this->is_loop ? ' tinvwl-loop-button-wrapper' : '' ) . $action_class,
+			'class_postion'       => sprintf( 'tinvwl-%s-add-to-cart', $position ) . ( $this->is_loop ? ' tinvwl-loop-button-wrapper' : '' ) . $action_class,
 			'product'             => $this->product,
 			'variation_id'        => ( $this->is_loop && in_array( ( $this->product->get_type() ), array(
 					'variable',
@@ -909,7 +916,7 @@ JOIN {$table_languages} l ON
 			$icon_upload       = tinv_get_option( 'add_to_wishlist' . ( $this->is_loop ? '_catalog' : '' ), 'icon_upload' );
 			$icon_upload_added = tinv_get_option( 'add_to_wishlist' . ( $this->is_loop ? '_catalog' : '' ), 'icon_upload_added' );
 			if ( 'custom' === $icon && ! empty( $icon_upload ) ) {
-				$text = sprintf( '<img src="%s" alt="%s"' . ( ! empty( $icon_upload_added ) ? 'class="icon-add-on-wishlist"' : '' ) . '  /> %s', esc_url( $icon_upload ), esc_attr( apply_filters( 'tinvwl_add_to_wishlist_text_loop', tinv_get_option( 'add_to_wishlist' . ( $this->is_loop ? '_catalog' : '' ), 'text' ) ) ), $text );
+				$text = sprintf( '<img src="%s" alt="%s"' . ( ! empty( $icon_upload_added ) ? ' class="icon-add-on-wishlist"' : '' ) . '  /> %s', esc_url( $icon_upload ), esc_attr( apply_filters( 'tinvwl_add_to_wishlist_text_loop', tinv_get_option( 'add_to_wishlist' . ( $this->is_loop ? '_catalog' : '' ), 'text' ) ) ), $text );
 				if ( ! empty( $icon_upload_added ) ) {
 					$text = sprintf( '<img src="%s" alt="%s" class="icon-already-on-wishlist" /> %s', esc_url( $icon_upload_added ), esc_attr( apply_filters( 'tinvwl_added_to_wishlist_text_loop', tinv_get_option( 'add_to_wishlist' . ( $this->is_loop ? '_catalog' : '' ), 'text_already_on' ) ) ), $text );
 				}
@@ -931,19 +938,21 @@ JOIN {$table_languages} l ON
 
 		$icon .= $this->is_loop ? ' tinvwl-loop' : '';
 
+		$product_variation = apply_filters( 'wpml_object_id', ( ( $this->is_loop && in_array( $this->product->get_type(), array(
+				'variable',
+				'variable-subscription',
+			) ) ) ? $this->variation_id : ( $this->product->is_type( 'variation' ) ? $this->product->get_id() : 0 ) ), 'product', true );
+
 		$content .= sprintf( '<a role="button" tabindex="0" name="%s" aria-label="%s" class="tinvwl_add_to_wishlist_button %s" data-tinv-wl-list="[]" data-tinv-wl-product="%s" data-tinv-wl-productvariation="%s" data-tinv-wl-productvariations="%s" data-tinv-wl-producttype="%s" data-tinv-wl-action="add">%s</a>',
 			esc_attr( sanitize_title( $button_text ) ),
 			$button_text,
 			$icon,
 			apply_filters( 'wpml_object_id', ( $this->product->is_type( 'variation' ) ? $this->product->get_parent_id() : $this->product->get_id() ), 'product', true ),
-			apply_filters( 'wpml_object_id', ( ( $this->is_loop && in_array( $this->product->get_type(), array(
-					'variable',
-					'variable-subscription',
-				) ) ) ? $this->variation_id : ( $this->product->is_type( 'variation' ) ? $this->product->get_id() : 0 ) ), 'product', true ),
+			( $product_variation ) ?: 0,
 			json_encode( ( $this->is_loop && in_array( $this->product->get_type(), array(
 					'variable',
 					'variable-subscription',
-				) ) ) ? $this->variation_ids : ( $this->product->is_type( 'variation' ) ? array( $this->product->get_id() ) : array( 0 ) ) ),
+				) ) ) ? $this->variation_ids : ( $this->product->is_type( 'variation' ) ? array( $this->product->get_id() ) : array() ) ),
 			$this->product->get_type(),
 			$text );
 		$content .= apply_filters( 'tinvwl_wishlist_button_after', '' );
@@ -990,6 +999,37 @@ JOIN {$table_languages} l ON
 		return ob_get_clean();
 	}
 
+	/**
+	 * Registers the WooCommerce blocks.
+	 */
+	function woocommerce_blocks() {
+		/**
+		 * Registers the custom product label block.
+		 */
+		register_block_type(
+			'tinvwl/add-to-wishlist',
+			[
+				'render_callback' => array( $this, 'woocommerce_blocks_render' ),
+			]
+		);
+	}
+
+	/**
+	 * Renders the WooCommerce blocks.
+	 *
+	 * @param array $attributes The block attributes.
+	 *
+	 * @return string The rendered output.
+	 */
+	function woocommerce_blocks_render( $attributes ) {
+		global $product;
+
+		ob_start();
+		echo do_shortcode( '[ti_wishlists_addtowishlist loop=yes]' );
+		$output = ob_get_clean();
+
+		return $output;
+	}
 
 	/**
 	 * Add button to WC Blocks
@@ -1045,7 +1085,7 @@ JOIN {$table_languages} l ON
 	 * Add button to WC Block All Products
 	 *
 	 */
-	function woocommerce_blocks( $description, $product_object ) {
+	function woocommerce_blocks_all_products( $description, $product_object ) {
 
 		global $product;
 
@@ -1063,15 +1103,9 @@ JOIN {$table_languages} l ON
 			return $description;
 		}
 
-		$position = tinv_get_option( 'add_to_wishlist_catalog', 'position' );
-
-		if ( ! in_array( $position, array( 'before', 'after', 'above_thumb' ) ) ) {
-			return $description;
-		}
-
 		$product = $product_object;
 		ob_start();
-		tinvwl_view_addto_htmlloop();
+		echo do_shortcode( '[ti_wishlists_addtowishlist loop=yes]' );
 		$add_to_wishlist = ob_get_clean();
 
 		$product = '';
@@ -1080,8 +1114,10 @@ JOIN {$table_languages} l ON
 	}
 
 	/**
-	 * @param WC_Product $product
-	 * @param bool $loop
+	 * Outputs hidden input fields for default variation attributes.
+	 *
+	 * @param WC_Product $product The product.
+	 * @param bool $loop Optional. Whether to enable the loop. Default is false.
 	 */
 	function default_variation_loop( $product, $loop ) {
 

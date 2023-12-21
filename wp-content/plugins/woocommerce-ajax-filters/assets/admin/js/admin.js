@@ -161,6 +161,26 @@ var berocket_admin_filter_types_by_attr = {
                 $(this).find('.fa').addClass('fa-chevron-down');
             }
         });
+        $(document).on('click', '.bapf_tools_header', function() {
+            $(this).find('.fa').removeClass('fa-chevron-down').removeClass('fa-chevron-up');
+            if( $('.bapf_tools_fields_hide').length ) {
+                $('.bapf_tools_fields').removeClass('bapf_tools_fields_hide');
+                $(this).find('.fa').addClass('fa-chevron-up');
+            } else {
+                $('.bapf_tools_fields').addClass('bapf_tools_fields_hide');
+                $(this).find('.fa').addClass('fa-chevron-down');
+            }
+        });
+        $(document).on('click', '.bapf_javascript_header', function() {
+            $(this).find('.fa').removeClass('fa-chevron-down').removeClass('fa-chevron-up');
+            if( $('.bapf_javascript_fields_hide').length ) {
+                $('.bapf_javascript_fields').removeClass('bapf_javascript_fields_hide');
+                $(this).find('.fa').addClass('fa-chevron-up');
+            } else {
+                $('.bapf_javascript_fields').addClass('bapf_javascript_fields_hide');
+                $(this).find('.fa').addClass('fa-chevron-down');
+            }
+        });
     })
 })(jQuery);
 function berocket_change_seo_friendly_urls() {

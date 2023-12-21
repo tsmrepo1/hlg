@@ -4,9 +4,9 @@
  *
  * Offers method specific to Taxonomy filter
  *
- * @author  YITH
+ * @author  YITH <plugins@yithemes.com>
  * @package YITH\AjaxProductFilter\Classes\Filters
- * @version 4.0.0
+ * @version 4.16.0
  */
 
 if ( ! defined( 'YITH_WCAN' ) ) {

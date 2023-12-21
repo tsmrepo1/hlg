@@ -126,7 +126,7 @@ if( ! class_exists('BeRocket_conditions') ) {
             }
             $html = '<select '.(empty($options['is_example']) ? '' : 'data-').'name="' . $name . '[equal]">';
             foreach($equal_list as $equal_slug => $equal_name) {
-                $html .= '<option value="' . $equal_slug . '"' . ($equal == $equal_slug ? ' selected' : '') . '>' . $equal_name . '</option>';
+                $html .= '<option value="' . $equal_slug . '"' . ($equal == $equal_slug ? ' selected' : '') . '>' . esc_html($equal_name) . '</option>';
             }
             $html .= '</select>';
             return $html;
@@ -207,7 +207,7 @@ if( ! class_exists('BeRocket_conditions') ) {
             $html = static::supcondition($name, $options);
             $html .= '<select '.(empty($options['is_example']) ? '' : 'data-').'name="' . $name . '[term]">';
             foreach($terms_i as $term_id => $term_name) {
-                $html .= '<option value="' . $term_id . '"' . ($options['term'] == $term_id ? ' selected' : '') . '>' . $term_name . '</option>';
+                $html .= '<option value="' . $term_id . '"' . ($options['term'] == $term_id ? ' selected' : '') . '>' . esc_html($term_name) . '</option>';
             }
             $html .= '</select>';
             return $html;
@@ -220,7 +220,7 @@ if( ! class_exists('BeRocket_conditions') ) {
             $html .= '<select '.(empty($options['is_example']) ? '' : 'data-').'name="' . $name . '[product_type]">';
             $product_types = wc_get_product_types();
             foreach($product_types as $term_id => $term_name) {
-                $html .= '<option value="' . $term_id . '"' . ($options['product_type'] == $term_id ? ' selected' : '') . '>' . $term_name . '</option>';
+                $html .= '<option value="' . $term_id . '"' . ($options['product_type'] == $term_id ? ' selected' : '') . '>' . esc_html($term_name) . '</option>';
             }
             $html .= '</select>';
             return $html;
@@ -253,7 +253,7 @@ if( ! class_exists('BeRocket_conditions') ) {
             );
             $html .= '<select '.(empty($options['is_example']) ? '' : 'data-').'name="' . $name . '[price_tax]">';
             foreach($tax_type as $tax_type_val => $tax_type_name) {
-                $html .= '<option value="'.$tax_type_val.'"'.($tax_type_val == $options['price_tax'] ? ' selected' : '').'>'.$tax_type_name.'</option>';
+                $html .= '<option value="'.$tax_type_val.'"'.($tax_type_val == $options['price_tax'] ? ' selected' : '').'>'.esc_html($tax_type_name).'</option>';
             }
             $html .= '</select>';
             return $html;
@@ -427,7 +427,7 @@ if( ! class_exists('BeRocket_conditions') ) {
             $html .= '<select '.(empty($options['is_example']) ? '' : 'data-').'name="' . $name . '[attribute]" class="br_cond_attr_select">';
             $has_selected_attr = false;
             foreach($product_attributes as $attribute) {
-                $html .= '<option value="' . $attribute['name'] . '"' . ( isset($options['attribute']) && $attribute['name'] == $options['attribute'] ? ' selected' : '' ) . '>' . $attribute['label'] . '</option>';
+                $html .= '<option value="' . $attribute['name'] . '"' . ( isset($options['attribute']) && $attribute['name'] == $options['attribute'] ? ' selected' : '' ) . '>' . esc_html($attribute['label']) . '</option>';
                 if( $attribute['name'] == $options['attribute'] ) {
                     $has_selected_attr = true;
                 }
@@ -438,7 +438,7 @@ if( ! class_exists('BeRocket_conditions') ) {
                 $html .= '<select class="br_attr_values br_attr_value_' . $attribute['name'] . '" '.(empty($options['is_example']) ? '' : 'data-').'name="' . $name . '[values][' . $attribute['name'] . ']"' . ($is_first_attr || $attribute['name'] == $options['attribute'] ? '' : ' style="display:none;"') . '>';
                 $html .= '<option value="">==Any==</option>';
                 foreach($attribute['value'] as $term_id => $term_name) {
-                    $html .= '<option value="' . $term_id . '"' . (! empty($options['values'][$attribute['name']]) && $options['values'][$attribute['name']] == $term_id ? ' selected' : '') . '>' . $term_name . '</option>';
+                    $html .= '<option value="' . $term_id . '"' . (! empty($options['values'][$attribute['name']]) && $options['values'][$attribute['name']] == $term_id ? ' selected' : '') . '>' . esc_html($term_name) . '</option>';
                 }
                 $html .= '</select>';
                 $is_first_attr = false;

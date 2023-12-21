@@ -6,15 +6,14 @@ import {
 	BlockControls,
 	useBlockProps,
 } from '@wordpress/block-editor';
-import { useEffect } from 'react';
+import { useEffect } from '@wordpress/element';
 import type { BlockAlignment } from '@wordpress/blocks';
 
 /**
  * Internal dependencies
  */
 import Block from './block';
-import withProductSelector from '../shared/with-product-selector';
-import { BLOCK_TITLE as label, BLOCK_ICON as icon } from './constants';
+import { useIsDescendentOfSingleProductTemplate } from '../shared/use-is-descendent-of-single-product-template';
 
 type UnsupportedAligments = 'wide' | 'full';
 type AllowedAlignments = Exclude< BlockAlignment, UnsupportedAligments >;
@@ -25,6 +24,9 @@ interface BlockAttributes {
 
 interface Attributes {
 	textAlign: 'left' | 'center' | 'right';
+	isDescendentOfSingleProduct: boolean;
+	isDescendentOfSingleProductBlock: boolean;
+	productId: number;
 }
 
 interface Context {
@@ -51,22 +53,35 @@ const PriceEdit = ( {
 	};
 	const isDescendentOfQueryLoop = Number.isFinite( context.queryId );
 
+	let { isDescendentOfSingleProductTemplate } =
+		useIsDescendentOfSingleProductTemplate( { isDescendentOfQueryLoop } );
+
+	if ( isDescendentOfQueryLoop ) {
+		isDescendentOfSingleProductTemplate = false;
+	}
+
 	useEffect(
-		() => setAttributes( { isDescendentOfQueryLoop } ),
-		[ setAttributes, isDescendentOfQueryLoop ]
+		() =>
+			setAttributes( {
+				isDescendentOfQueryLoop,
+				isDescendentOfSingleProductTemplate,
+			} ),
+		[
+			isDescendentOfQueryLoop,
+			isDescendentOfSingleProductTemplate,
+			setAttributes,
+		]
 	);
 
 	return (
 		<>
 			<BlockControls>
-				{ isDescendentOfQueryLoop && (
-					<AlignmentToolbar
-						value={ attributes.textAlign }
-						onChange={ ( textAlign: AllowedAlignments ) => {
-							setAttributes( { textAlign } );
-						} }
-					/>
-				) }
+				<AlignmentToolbar
+					value={ attributes.textAlign }
+					onChange={ ( textAlign: AllowedAlignments ) => {
+						setAttributes( { textAlign } );
+					} }
+				/>
 			</BlockControls>
 			<div { ...blockProps }>
 				<Block { ...blockAttrs } />
@@ -75,4 +90,4 @@ const PriceEdit = ( {
 	);
 };
 
-export default withProductSelector( { icon, label } )( PriceEdit );
+export default PriceEdit;

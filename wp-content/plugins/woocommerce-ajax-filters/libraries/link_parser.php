@@ -45,13 +45,14 @@ class BeRocket_AAPF_link_parser {
         return $result;
     }
     function check_taxonomy($taxonomy) {
-        if( taxonomy_exists( 'pa_'.$taxonomy ) ) {
-            return 'pa_'.$taxonomy;
-        } elseif( taxonomy_exists( $taxonomy ) ) {
-            return $taxonomy;
-        } elseif ( array_key_exists($taxonomy, $this->taxonomy_changer) ) {
+        if ( array_key_exists($taxonomy, $this->taxonomy_changer) ) {
             return $this->taxonomy_changer[$taxonomy]['taxonomy'];
         }
-        return apply_filters('bapf_link_parser_check_taxonomy', false, $taxonomy);
+        global $berocket_parse_page_obj;
+        $return = $berocket_parse_page_obj->func_check_attribute_name($taxonomy);
+        if( is_wp_error($return) ) {
+            $return = false;
+        }
+        return $return;
     }
 }

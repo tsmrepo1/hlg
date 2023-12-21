@@ -35,8 +35,8 @@ if( ! class_exists( 'BeRocket_Framework' ) ) {
     include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
     load_plugin_textdomain('BeRocket_domain', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/');
     class BeRocket_Framework {
-        public static $framework_version = '2.8.0';
-        public $plugin_framework_version = '2.8.0';
+        public static $framework_version = '2.8.2';
+        public $plugin_framework_version = '2.8.2';
         public static $settings_name = '';
         public $addons;
         public $libraries;
@@ -138,6 +138,7 @@ if( ! class_exists( 'BeRocket_Framework' ) ) {
                         include_once( plugin_dir_path( __FILE__ ) . 'sale/sale.php');
                     }
                 }
+                add_action( 'before_woocommerce_init', array($this, 'hpos_compatible'));
             }
             do_action($this->info[ 'plugin_name' ].'_framework_construct', $this->cc);
             add_filter('brfr_get_plugin_version_capability_'.$this->cc->info['plugin_name'], array($this, 'get_plugin_version_capability'));
@@ -1215,6 +1216,11 @@ if( ! class_exists( 'BeRocket_Framework' ) ) {
                 }
             }
             return $apply;
+        }
+        function hpos_compatible() {
+            if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+                \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', $this->info['plugin_file'], ( ! empty($this->values['hpos_comp']) ) );
+            }
         }
     }
     add_action('admin_init', 'BeRocket_admin_init_user_capabilities');

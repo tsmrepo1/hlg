@@ -120,7 +120,7 @@ export default class YITH_WCAN_Filter {
 
 		$( document )
 			.trigger( 'yith-wcan-ajax-filtered', [ response, filters ] )
-			.trigger( 'yith_wcwl_reload_fragments' );
+			.trigger( 'yith_wcwl_reload_after_ajax' );
 	}
 
 	// build url to show

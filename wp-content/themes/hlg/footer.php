@@ -16,7 +16,7 @@
       <div class="container">
         <div class="site-footer__menu-wrap text-center">
           <nav>
-            <ul>
+            <!-- <ul>
               <li>
                 <a href="#">Alkaline Water Ionizers</a>
               </li>
@@ -29,7 +29,16 @@
               <li>
                 <a href="#">Contact Us! </a>
               </li>
-            </ul>
+            </ul> -->
+            <?php
+            wp_nav_menu(
+            array(
+            "menu"         => "Top Footer Menu",
+            "menu_class"   => "",
+            "container"    => "ul",
+            )
+            );
+            ?>
           </nav>
         </div>
       </div>
@@ -39,13 +48,14 @@
       <div class="container">
         <div class="text-center max-w-[28.125rem] mx-auto">
           <div class="mb-8">
-            <a href="index.html" class="inline-block w-24 lg:w-28 xl:w-32 2xl:w-36"><img src="<?php echo get_template_directory_uri();?>/assets/images/footer-logo.png" alt="footer logo" width="120" height="70" class="w-48 inline-block" /> </a>
+            <a href="<?php echo home_url(); ?>" class="inline-block w-24 lg:w-28 xl:w-32 2xl:w-36"><img src="<?php echo get_template_directory_uri();?>/assets/images/footer-logo.png" alt="footer logo" width="120" height="70" class="w-48 inline-block" /> </a>
           </div>
 
-          <form action="#" class="form newsletter-form relative max-w-md mb-8" id="newsletterForm">
+          <!-- <form action="#" class="form newsletter-form relative max-w-md mb-8" id="newsletterForm">
             <input type="email" name="nf_email" class="form__input pl-4 pr-10 py-4 2xl:py-5" placeholder="Your Email*" required />
             <button type="submit" class="btn btn-primary absolute top-0 right-0 rounded-md">Submit</button>
-          </form>
+          </form> -->
+          <?php echo do_shortcode('[newsletter_form html_class="form newsletter-form relative max-w-md mb-8"]');?>
 
           <ul class="social-icons inline-flex gap-x-6 -md:gap-x-4">
             <li>
@@ -87,7 +97,7 @@
           <div class="col-span-12 lg:col-span-6 text-center lg:text-left">
             <div class="site-footer__bottom-menu-wrap">
               <nav>
-                <ul class="inline-flex">
+                <!-- <ul class="inline-flex">
                   <li>
                     <a href="#">Privacy</a>
                   </li>
@@ -99,7 +109,16 @@
                   <li>
                     <a href="#">Promo T&C Apply</a>
                   </li>
-                </ul>
+                </ul> -->
+            <?php
+            wp_nav_menu(
+            array(
+            "menu"         => "footer-menu-1",
+            "menu_class"   => "inline-flex",
+            "container"    => "ul",
+            )
+            );
+            ?>
               </nav>
             </div>
           </div>

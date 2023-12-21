@@ -400,7 +400,7 @@ if( ! class_exists( 'berocket_admin_notices' ) ) {
                 $notice['rightwidth'] += 300;
             }
             echo '
-                <div class="notice berocket_admin_notice berocket_admin_notice_', self::$notice_index, '" data-notice=\'', json_encode($notice_data), '\'>',
+                <div class="notice berocket_admin_notice berocket_admin_notice_', self::$notice_index, '" data-notice=\'', json_encode($notice_data), '\' data-nonce="' . wp_create_nonce('berocket_information_close_notice') . '">',
                     ( empty($notice['image']['local']) ? '' : '<img class="berocket_notice_img" src="' . $notice['image']['local'] . '">' ),
                     ( empty($notice['righthtml']) ? '' :
                     '<div class="berocket_notice_right_content">
@@ -544,7 +544,8 @@ if( ! class_exists( 'berocket_admin_notices' ) ) {
                     jQuery(document).on("click", ".berocket_admin_notice.berocket_admin_notice_', self::$notice_index, ' .berocket_no_thanks", function(event){
                         event.preventDefault();
                         var notice = jQuery(this).parents(".berocket_admin_notice.berocket_admin_notice_', self::$notice_index, '").data("notice");
-                        jQuery.post(ajaxurl, {action:"berocket_admin_close_notice", notice:notice}, function(data){});
+                        var nonce = jQuery(this).parents(".berocket_admin_notice.berocket_admin_notice_', self::$notice_index, '").data("nonce");
+                        jQuery.post(ajaxurl, {action:"berocket_admin_close_notice", notice:notice, wp_nonce:nonce}, function(data){});
                         jQuery(this).parents(".berocket_admin_notice.berocket_admin_notice_', self::$notice_index, '").hide();
                     });
                 });';
@@ -704,7 +705,8 @@ if( ! class_exists( 'berocket_admin_notices' ) ) {
             }
         }
         public static function close_notice($notice = FALSE) {
-            if ( ! ( current_user_can( 'manage_options' ) ) ) {
+            $wp_nonce = ( empty($_POST['wp_nonce']) ? '' : $_POST['wp_nonce'] );
+            if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $wp_nonce, 'berocket_information_close_notice' ) ) {
                 echo __( 'Do not have access for this feature', 'BeRocket_domain' );
                 wp_die();
             }
@@ -843,6 +845,7 @@ if( ! class_exists( 'berocket_admin_notices_rate_stars' ) ) {
                                 data-prevent="0"
                                 data-function="berocket_rate_star_close_notice"
                                 data-later="0"
+                                data-wp_nonce="' . wp_create_nonce('berocket_rate_stars_close') . '"
                                 data-thanks_html=\'<picture><source type="image/webp" srcset="'.plugin_dir_url( __FILE__ ).'../assets/images/Thank-you.webp" alt="Feature Request"><img src="https://berocket.com/images/plugin/Thank-you.png" style="width: 100%;" alt="Feature Request"></picture><h3 class="berocket_thank_you_rate_us">'.__('Each good feedback is very important for plugin growth', 'BeRocket_domain').'</h3>\'
                                 href="https://wordpress.org/support/plugin/'.$plugin['free_slug'].'/reviews/?filter=5#new-post"
                                 target="_blank">'.__('Ok, you deserved it', 'BeRocket_domain').'</a>
@@ -852,6 +855,7 @@ if( ! class_exists( 'berocket_admin_notices_rate_stars' ) ) {
                                 data-action="berocket_rate_stars_close"
                                 data-prevent="1"
                                 data-later="1"
+                                data-wp_nonce="' . wp_create_nonce('berocket_rate_stars_close') . '"
                                 data-function="berocket_rate_star_close_notice"
                                 href="#later">
                                     <span class="brfeature_hide_mobile">'.__('Maybe later', 'BeRocket_domain').'</span>
@@ -863,6 +867,7 @@ if( ! class_exists( 'berocket_admin_notices_rate_stars' ) ) {
                                 data-action="berocket_rate_stars_close"
                                 data-prevent="1"
                                 data-later="0"
+                                data-wp_nonce="' . wp_create_nonce('berocket_rate_stars_close') . '"
                                 data-function="berocket_rate_star_close_notice"
                                 href="#close">
                                     <span class="brfeature_hide_mobile">'.__('I already did', 'BeRocket_domain').'</span>
@@ -936,7 +941,8 @@ if( ! class_exists( 'berocket_admin_notices_rate_stars' ) ) {
             update_option('berocket_admin_notices_rate_stars', $disabled);
         }
         function disable_rate_notice() {
-            if ( ! ( current_user_can( 'manage_options' ) ) ) {
+            $wp_nonce = (empty($_GET['wp_nonce']) ? (empty($_POST['wp_nonce']) ? '' : $_POST['wp_nonce']) : $_GET['wp_nonce']);
+            if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $wp_nonce, 'berocket_rate_stars_close' ) ) {
                 echo __( 'Do not have access for this feature', 'BeRocket_domain' );
                 wp_die();
             }
@@ -954,7 +960,8 @@ if( ! class_exists( 'berocket_admin_notices_rate_stars' ) ) {
             wp_die();
         }
         function feature_request_send() {
-            if ( ! ( current_user_can( 'manage_options' ) ) ) {
+            $wp_nonce = ( empty($_POST['wp_nonce']) ? '' : $_POST['wp_nonce'] );
+            if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $wp_nonce, 'berocket_feature_request_send' ) ) {
                 echo __( 'Do not have access for this feature', 'BeRocket_domain' );
                 wp_die();
             }
@@ -992,6 +999,7 @@ if( ! class_exists( 'berocket_admin_notices_rate_stars' ) ) {
                                 data-action="berocket_rate_stars_close"
                                 data-prevent="0"
                                 data-later="0"
+                                data-wp_nonce="' . wp_create_nonce('berocket_rate_stars_close') . '"
                                 data-function="berocket_rate_star_close_notice"
                                 data-thanks_html=\'<picture><source type="image/webp" srcset="'.plugin_dir_url( __FILE__ ).'../assets/images/Thank-you.webp" alt="Feature Request"><img src="https://berocket.com/images/plugin/Thank-you.png" style="width: 100%;" alt="Feature Request"></picture><h3 class="berocket_thank_you_rate_us">'.__('Each good feedback is very important for plugin growth', 'BeRocket_domain').'</h3>\'
                                 href="https://wordpress.org/support/plugin/'.$plugin['free_slug'].'/reviews/?filter=5#new-post"
@@ -1684,6 +1692,7 @@ if( ! class_exists( 'berocket_admin_notices_rate_stars' ) ) {
                             </picture>
                             <form class="berocket_feature_request_inside">
                                 <input name="brfeature_plugin" type="hidden" value="'.$plugin['id'].'">
+                                <input name="wp_nonce" type="hidden" value="' . wp_create_nonce('berocket_feature_request_send') . '">
                                 <input name="brfeature_title" placeholder="'.__('Feature Title', 'BeRocket_domain').'">
                                 <input name="brfeature_email" placeholder="'.__('Email (optional)', 'BeRocket_domain').'">
                                 <textarea name="brfeature_description" placeholder="'.__('Feature Description', 'BeRocket_domain').'"></textarea>
@@ -1706,6 +1715,7 @@ if( ! class_exists( 'berocket_admin_notices_rate_stars' ) ) {
                                 data-action="berocket_rate_stars_close"
                                 data-prevent="0"
                                 data-later="0"
+                                data-wp_nonce="' . wp_create_nonce('berocket_rate_stars_close') . '"
                                 data-function="berocket_rate_star_close_notice"
                                 data-thanks_html=\'<picture><source type="image/webp" srcset="'.plugin_dir_url( __FILE__ ).'../assets/images/Thank-you.webp" alt="Feature Request"><img src="https://berocket.com/images/plugin/Thank-you.png" style="width: 100%;" alt="Feature Request"></picture><h3 class="berocket_thank_you_rate_us">'.__('Each good feedback is very important for plugin growth', 'BeRocket_domain').'</h3>\'
                                 href="https://wordpress.org/support/plugin/'.$plugin['free_slug'].'/reviews/?filter=5#new-post"
@@ -1717,6 +1727,7 @@ if( ! class_exists( 'berocket_admin_notices_rate_stars' ) ) {
                                 data-action="berocket_rate_stars_close"
                                 data-prevent="1"
                                 data-later="0"
+                                data-wp_nonce="' . wp_create_nonce('berocket_rate_stars_close') . '"
                                 data-function="berocket_rate_star_close_notice"
                                 href="#close">'.__('I already rated it', 'BeRocket_domain').'</a></li>
                             </ul>

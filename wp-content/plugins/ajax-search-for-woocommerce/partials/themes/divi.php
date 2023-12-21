@@ -14,10 +14,6 @@ add_filter( 'et_builder_load_requests', function ( $requests ) {
 	return $requests;
 } );
 
-add_filter( 'dgwt/wcas/scripts/mobile_breakpoint', function () {
-	return 980;
-} );
-
 add_action( 'wp_footer', function () {
 	echo '<div id="wcas-divi-search" style="display: block;">' . do_shortcode( '[wcas-search-form layout="classic" mobile_overlay="1" mobile_breakpoint="980" ]' ) . '</div>';
 } );
@@ -52,7 +48,7 @@ add_action( 'wp_footer', function () {
 				) {
 					diviSearch.replaceWith(search);
 					$('.et_search_form_container .et_close_search_field').on('click', function () {
-						$('.et_search_form_container .dgwt-wcas-close').click();
+						$('.et_search_form_container .dgwt-wcas-close').trigger('click');
 					});
 					if (!body.hasClass('et_vertical_nav')) {
 						$('#et_top_search').on('click', function () {
@@ -96,7 +92,7 @@ add_action( 'wp_footer', function () {
 				// Open overlay automatically
 				$('#et_top_search #et_search_icon, #et_top_search_mob #et_search_icon').on('click', function () {
 					if ($(window).width() <= 980) {
-						var $handler = $('.et_search_outer .js-dgwt-wcas-enable-mobile-form');
+						var $handler = $('.js-dgwt-wcas-enable-mobile-form');
 						if ($handler.length) {
 							$handler[0].click();
 						}
@@ -104,7 +100,11 @@ add_action( 'wp_footer', function () {
 						setTimeout(function () {
 							var $closeBtn = $('.et_close_search_field');
 							if ($closeBtn.length) {
-								$closeBtn.click();
+								$closeBtn.trigger('click');
+							}
+							var $closeBtn2 = $('.dm-search-box .close');
+							if ($closeBtn2.length) {
+								$closeBtn2.trigger('click');
 							}
 						}, 1100)
 					}
@@ -121,14 +121,14 @@ add_action( 'wp_footer', function () {
 						setTimeout(function () {
 							var $closeBtn = $('.et_pb_menu__close-search-button');
 							if ($closeBtn.length) {
-								$closeBtn.click();
+								$closeBtn.trigger('click');
 							}
 						}, 1100)
 					} else {
 						setTimeout(function () {
 							var $input = $('.et_pb_menu__search .dgwt-wcas-search-input');
 							if ($input.length > 0 && $input.val().length === 0) {
-								$input.focus();
+								$input.trigger('focus');
 							}
 						}, 500)
 					}

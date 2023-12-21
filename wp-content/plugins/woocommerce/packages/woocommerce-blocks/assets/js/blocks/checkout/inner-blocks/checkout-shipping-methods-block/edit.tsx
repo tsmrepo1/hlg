@@ -19,7 +19,9 @@ import {
 	AdditionalFields,
 	AdditionalFieldsContent,
 } from '../../form-step';
+import NoShippingPlaceholder from './no-shipping-placeholder';
 import Block from './block';
+import './editor.scss';
 
 type shippingAdminLink = {
 	id: number;
@@ -62,6 +64,27 @@ export const Edit = ( {
 			) }
 		>
 			<InspectorControls>
+				<PanelBody
+					title={ __(
+						'Shipping Calculations',
+						'woo-gutenberg-products-block'
+					) }
+				>
+					<p className="wc-block-checkout__controls-text">
+						{ __(
+							'Options that control shipping can be managed in your store settings.',
+							'woo-gutenberg-products-block'
+						) }
+					</p>
+					<ExternalLink
+						href={ `${ ADMIN_URL }admin.php?page=wc-settings&tab=shipping&section=options` }
+					>
+						{ __(
+							'Manage shipping options',
+							'woo-gutenberg-products-block'
+						) }
+					</ExternalLink>{ ' ' }
+				</PanelBody>
 				{ globalShippingMethods.length > 0 && (
 					<PanelBody
 						title={ __(
@@ -97,11 +120,14 @@ export const Edit = ( {
 				) }
 				{ activeShippingZones.length && (
 					<PanelBody
-						title={ __( 'Zones', 'woo-gutenberg-products-block' ) }
+						title={ __(
+							'Shipping Zones',
+							'woo-gutenberg-products-block'
+						) }
 					>
 						<p className="wc-block-checkout__controls-text">
 							{ __(
-								'You currently have the following shipping zones active.',
+								'Shipping Zones can be made managed in your store settings.',
 								'woo-gutenberg-products-block'
 							) }
 						</p>
@@ -115,19 +141,11 @@ export const Edit = ( {
 								/>
 							);
 						} ) }
-						<ExternalLink
-							href={ `${ ADMIN_URL }admin.php?page=wc-settings&tab=shipping` }
-						>
-							{ __(
-								'Manage shipping zones',
-								'woo-gutenberg-products-block'
-							) }
-						</ExternalLink>
 					</PanelBody>
 				) }
 			</InspectorControls>
 			<Noninteractive>
-				<Block />
+				<Block noShippingPlaceholder={ <NoShippingPlaceholder /> } />
 			</Noninteractive>
 			<AdditionalFields block={ innerBlockAreas.SHIPPING_METHODS } />
 		</FormStepBlock>

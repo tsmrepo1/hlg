@@ -4,13 +4,13 @@
  * Plugin Name: FiboSearch - AJAX Search for WooCommerce
  * Plugin URI: https://fibosearch.com?utm_source=wp-admin&utm_medium=referral&utm_campaign=author_uri&utm_gen=utmdc
  * Description: The most popular WooCommerce product search. Gives your users a well-designed advanced AJAX search bar with live search suggestions.
- * Version: 1.22.3
+ * Version: 1.26.1
  * Author: FiboSearch Team
  * Author URI: https://fibosearch.com?utm_source=wp-admin&utm_medium=referral&utm_campaign=author_uri&utm_gen=utmdc
  * Text Domain: ajax-search-for-woocommerce
  * Domain Path: /languages
  * WC requires at least: 5.5
- * WC tested up to: 7.4
+ * WC tested up to: 8.2
  *
  */
 // Exit if accessed directly
@@ -54,9 +54,17 @@ if ( !class_exists( 'DGWT_WC_Ajax_Search' ) && !function_exists( 'dgoraAsfwFs' )
          */
         public  $nativeSearch ;
         /**
+         * @var \DgoraWcas\Personalization
+         */
+        public  $personalization ;
+        /**
          * @var \DgoraWcas\Engines\TNTSearchMySQL\TNTSearch
          */
         public  $tntsearchMySql ;
+        /**
+         * @var \DgoraWcas\Search
+         */
+        protected  $search ;
         public  $tntsearchMySqlValid = false ;
         public  $searchInstances = 0 ;
         public static function getInstance()
@@ -81,7 +89,7 @@ if ( !class_exists( 'DGWT_WC_Ajax_Search' ) && !function_exists( 'dgoraAsfwFs' )
                 // @TODO Temporary always use native WordPress DetailsBox engine.
                 // Replace with details.php and shortinit in future releases
                 new \DgoraWcas\Engines\WordPressNative\DetailsBox();
-                new \DgoraWcas\Personalization();
+                self::$instance->personalization = new \DgoraWcas\Personalization();
                 new \DgoraWcas\Scripts();
                 $embeddingViaMenu = new \DgoraWcas\EmbeddingViaMenu();
                 $embeddingViaMenu->init();
@@ -313,15 +321,18 @@ if ( !class_exists( 'DGWT_WC_Ajax_Search' ) && !function_exists( 'dgoraAsfwFs' )
             
             if ( \DgoraWcas\Helpers::isSettingsPage() ) {
                 $localize = array(
-                    'adminurl' => admin_url( 'admin-ajax.php' ),
-                    'labels'   => \DgoraWcas\Helpers::getLabels(),
-                    'nonces'   => array(
+                    'adminurl'    => admin_url( 'admin-ajax.php' ),
+                    'labels'      => \DgoraWcas\Helpers::getLabels(),
+                    'adminLabels' => array(
+                    'preview' => __( 'No interaction! This is only a preview.', 'ajax-search-for-woocommerce' ),
+                ),
+                    'nonces'      => array(
                     'build_index'             => wp_create_nonce( 'dgwt_wcas_build_index' ),
                     'stop_build_index'        => wp_create_nonce( 'dgwt_wcas_stop_build_index' ),
                     'build_index_heartbeat'   => wp_create_nonce( 'dgwt_wcas_build_index_heartbeat' ),
                     'advanced_options_switch' => wp_create_nonce( 'dgwt_wcas_advanced_options_switch' ),
                 ),
-                    'images'   => array(
+                    'images'      => array(
                     'admin_preloader_url' => DGWT_WCAS_URL . 'assets/img/preloader.gif',
                 ),
                 );
@@ -374,6 +385,17 @@ if ( !class_exists( 'DGWT_WC_Ajax_Search' ) && !function_exists( 'dgoraAsfwFs' )
         {
             $lang_dir = dirname( plugin_basename( DGWT_WCAS_FILE ) ) . '/languages/';
             load_plugin_textdomain( 'ajax-search-for-woocommerce', false, $lang_dir );
+        }
+        
+        /**
+         * @see \DgoraWcas\Search
+         */
+        public function searchPosts( $phrase, $args = array() )
+        {
+            if ( is_null( $this->search ) ) {
+                $this->search = new \DgoraWcas\Search();
+            }
+            return $this->search->searchPosts( $phrase, $args );
         }
     
     }

@@ -11,6 +11,8 @@ class BeRocket_AAPF_faster_attribute_recount {
         //Sale Status custom recount
         add_filter('berocket_aapf_recount_terms_query', array(__CLASS__, 'onsale_query'), 20, 3);
         add_action('plugins_loaded', array(__CLASS__, 'plugins_loaded'));
+        //price range
+        add_filter('berocket_aapf_recount_price_query', array(__CLASS__, 'search_query'), 50, 3);
     }
     static function plugins_loaded() {
         do_action('berocket_aapf_recount_terms_initialized', __CLASS__);
@@ -220,7 +222,7 @@ class BeRocket_AAPF_faster_attribute_recount {
     static function child_include($query, $taxonomy_data, $terms) {
         global $wpdb;
         extract($taxonomy_data);
-        if( $include_child ) {
+        if( ! empty($include_child) ) {
             $taxonomy_object = get_taxonomy($taxonomy);
             if( ! empty($taxonomy_object->hierarchical) ) {
                 $hierarchy = br_get_taxonomy_hierarchy(array('taxonomy' => $taxonomy, 'return' => 'child'));

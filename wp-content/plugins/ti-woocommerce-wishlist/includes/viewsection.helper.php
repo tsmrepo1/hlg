@@ -512,7 +512,7 @@ class TInvWL_ViewSection extends TInvWL_View {
 		$flags['default'] = $default;
 
 		if ( ! is_array( $value ) ) {
-			$value = trim( $value );
+			$value = is_string( $value ) ? trim( $value ) : $value;
 		}
 		$value = filter_var( $value, $filter, $flags );
 
@@ -577,9 +577,6 @@ class TInvWL_ViewSection extends TInvWL_View {
 					$result[ $id ] = $result_field;
 				}
 			}
-		}
-		if ( empty( $result ) ) {
-			return null;
 		}
 
 		return $result;

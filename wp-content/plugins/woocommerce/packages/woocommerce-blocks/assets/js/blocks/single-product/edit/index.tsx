@@ -2,24 +2,29 @@
  * External dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { useState } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 import { Placeholder, Button, PanelBody } from '@wordpress/components';
 import { withProduct } from '@woocommerce/block-hocs';
 import BlockErrorBoundary from '@woocommerce/base-components/block-error-boundary';
 import EditProductLink from '@woocommerce/editor-components/edit-product-link';
-import { singleProductBlockPreview } from '@woocommerce/resource-previews';
-import { InspectorControls } from '@wordpress/block-editor';
+import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { ProductResponseItem } from '@woocommerce/types';
+import ErrorPlaceholder, {
+	ErrorObject,
+} from '@woocommerce/editor-components/error-placeholder';
 
+import { PRODUCTS_STORE_NAME, Product } from '@woocommerce/data';
+import { useSelect } from '@wordpress/data';
 /**
  * Internal dependencies
  */
 import './editor.scss';
-import ApiError from './api-error';
 import SharedProductControl from './shared-product-control';
 import EditorBlockControls from './editor-block-controls';
 import LayoutEditor from './layout-editor';
-import { BLOCK_TITLE, BLOCK_ICON, BLOCK_DESCRIPTION } from '../constants';
+import { BLOCK_ICON } from '../constants';
+import metadata from '../block.json';
+import { Attributes } from '../types';
 
 interface EditorProps {
 	className: string;
@@ -27,32 +32,15 @@ interface EditorProps {
 		productId: number;
 		isPreview: boolean;
 	};
-	setAttributes: ( attributes: {
-		productId: number;
-		isPreview: boolean;
-	} ) => void;
-	error: string;
+	setAttributes: ( attributes: Attributes ) => void;
+	error: string | ErrorObject;
 	getProduct: () => void;
 	product: ProductResponseItem;
 	isLoading: boolean;
 	clientId: string;
 }
 
-/**
- * Component to handle edit mode of the "Single Product Block".
- *
- * @param {Object}            props               Incoming props for the component.
- * @param {string}            props.className
- * @param {Object}            props.attributes    Incoming block attributes.
- * @param {function(any):any} props.setAttributes Setter for block attributes.
- * @param {string}            props.error
- * @param {function(any):any} props.getProduct
- * @param {Object}            props.product
- * @param {boolean}           props.isLoading
- * @param {string}            props.clientId
- */
 const Editor = ( {
-	className,
 	attributes,
 	setAttributes,
 	error,
@@ -63,23 +51,47 @@ const Editor = ( {
 }: EditorProps ) => {
 	const { productId, isPreview } = attributes;
 	const [ isEditing, setIsEditing ] = useState( ! productId );
+	const blockProps = useBlockProps();
 
-	if ( isPreview ) {
-		return singleProductBlockPreview;
-	}
+	const productPreview = useSelect( ( select ) => {
+		if ( ! isPreview ) {
+			return null;
+		}
+		return select( PRODUCTS_STORE_NAME ).getProducts< Array< Product > >( {
+			per_page: 1,
+		} );
+	} );
+
+	useEffect( () => {
+		const productPreviewId = productPreview
+			? productPreview[ 0 ]?.id
+			: null;
+		if ( ! productPreviewId ) {
+			return;
+		}
+
+		setAttributes( {
+			...attributes,
+			productId: productPreviewId,
+		} );
+		setIsEditing( false );
+	}, [ attributes, productPreview, setAttributes ] );
 
 	if ( error ) {
 		return (
-			<ApiError
-				error={ error }
+			<ErrorPlaceholder
+				className="wc-block-editor-single-product-error"
+				error={ error as ErrorObject }
 				isLoading={ isLoading }
-				getProduct={ getProduct }
+				onRetry={ getProduct }
 			/>
 		);
 	}
 
 	return (
-		<div className={ className }>
+		<div { ...blockProps }>
+			{ /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */ }
+			{ /* @ts-ignore */ }
 			<BlockErrorBoundary
 				header={ __(
 					'Single Product Block Error',
@@ -93,11 +105,11 @@ const Editor = ( {
 				{ isEditing ? (
 					<Placeholder
 						icon={ BLOCK_ICON }
-						label={ BLOCK_TITLE }
-						className="wc-block-single-product"
+						label={ metadata.title }
+						className="wc-block-editor-single-product"
 					>
-						{ BLOCK_DESCRIPTION }
-						<div className="wc-block-single-product__selection">
+						{ metadata.description }
+						<div className="wc-block-editor-single-product__selection">
 							<SharedProductControl
 								attributes={ attributes }
 								setAttributes={ setAttributes }
@@ -113,7 +125,7 @@ const Editor = ( {
 						</div>
 					</Placeholder>
 				) : (
-					<>
+					<div>
 						<InspectorControls>
 							<PanelBody
 								title={ __(
@@ -128,13 +140,14 @@ const Editor = ( {
 								/>
 							</PanelBody>
 						</InspectorControls>
+
 						<EditProductLink productId={ productId } />
 						<LayoutEditor
 							clientId={ clientId }
 							product={ product }
 							isLoading={ isLoading }
 						/>
-					</>
+					</div>
 				) }
 			</BlockErrorBoundary>
 		</div>

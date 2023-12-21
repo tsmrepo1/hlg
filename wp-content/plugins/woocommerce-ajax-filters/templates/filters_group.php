@@ -11,6 +11,7 @@
     </table>
     <h3><?php _e('Filters In Group', 'BeRocket_AJAX_domain'); ?></h3>
     <?php
+    $filters_correct = 0;
     $query = new WP_Query(array('post_type' => 'br_product_filter', 'nopaging' => true));
     if ( $query->have_posts() ) {
         echo '<select class="berocket_filter_list">';
@@ -22,8 +23,8 @@
         echo ' <a class="button berocket_add_filter_to_group" href="#add_filter">' . __('Add filter', 'BeRocket_AJAX_domain') . '</a>';
         echo ' <a href="' . admin_url('edit.php?post_type=br_product_filter') . '">' . __('Manage filters', 'BeRocket_AJAX_domain') . '</a>';
         wp_reset_postdata();
+        $filters_correct++;
     }
-    $filters_correct = 0;
     $errors = array();
     if( isset($filters['filters']) && is_array($filters['filters']) ) {
         echo '<ul class="berocket_filter_added_list" data-name="' . $post_name . '[filters][]" data-url="' . admin_url('post.php') . '">';
@@ -40,7 +41,6 @@
                         ' . __('Width', 'BeRocket_AJAX_domain') . '<input type="text" name="'.$post_name.'[filters_data][' . $filter_id . '][width]" value="' . br_get_value_from_array($filters, array('filters_data', $filter_id, 'width')) . '" placeholder="100%">
                     </div>
                 </li>';
-                $filters_correct++;
             } else {
                 $errors[] = $filter_id;
             }
@@ -53,8 +53,8 @@
         ));
     }
     if($filters_correct == 0) {
-        echo '<p>' . __('No one filters was created. Please create filters first', 'BeRocket_AJAX_domain')
-        . ' <a href="' . admin_url('edit.php?post_type=br_product_filter') . '">' . __('FILTERS PAGE', 'BeRocket_AJAX_domain') . '</a></p>';
+        echo '<p>' . __('No filter has been created. First Create a Filter', 'BeRocket_AJAX_domain')
+        . ' <a href="' . admin_url('post-new.php?post_type=br_product_filter') . '">' . __('Create a Filter', 'BeRocket_AJAX_domain') . '</a></p>';
     }
     $popup_text = '<p style="font-size:24px;">'
     . __('Group do not have filters. Please add filters before save it.', 'BeRocket_AJAX_domain') 

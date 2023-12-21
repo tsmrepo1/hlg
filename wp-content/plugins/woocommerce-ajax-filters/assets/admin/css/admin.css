@@ -675,7 +675,7 @@ td.br_colorpicker_field.colorpicker_removed:after {
     margin: 0;
 }
 .br_framework_settings.br_ajax_filters_settings textarea {
-    min-height: 70px;
+    min-height: 45px;
 }
 .bapf_custom_css_admin td {
     margin: 0;
@@ -685,16 +685,22 @@ td.br_colorpicker_field.colorpicker_removed:after {
 .bapf_custom_css_admin td h3 {
     margin-top: 0;
 }
+.bapf_javascript_header, 
+.bapf_tools_header, 
 .bapf_incompatibility_fixes_header {
     cursor: pointer;
 }
+.bapf_javascript_header .fa,
+.bapf_tools_header .fa,
 .bapf_incompatibility_fixes_header .fa {
     margin-left: 20px;
 }
+.bapf_javascript_header:hover .fa,
+.bapf_tools_header:hover .fa,
 .bapf_incompatibility_fixes_header:hover .fa {
     color: #0085ba;
 }
-.bapf_incompatibility_fixes_hide {
+.bapf_javascript_fields_hide, .bapf_tools_fields_hide, .bapf_incompatibility_fixes_hide {
     display: none!important;
 }
 .braapf_widget_color_pick tr.element-depth-1 td:first-child:before,

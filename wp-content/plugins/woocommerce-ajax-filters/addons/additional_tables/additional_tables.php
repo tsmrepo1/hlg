@@ -110,7 +110,7 @@ class BeRocket_aapf_variations_tables_addon extends BeRocket_framework_addon_lib
         $collate = '';
         $result = $wpdb->get_row("SHOW TABLE STATUS where name like '{$wpdb->posts}'");
         if( ! empty($result) && ! empty($result->Collation) ) {
-            $collate = 'DEFAULT CHARACTER SET ' . $wpdb->charset . ' COLLATE ' . $result->Collation;
+            $collate = 'COLLATE ' . $result->Collation;
         } else {
             if ( $wpdb->has_cap( 'collation' ) ) {
                 $collate = $wpdb->get_charset_collate();
@@ -408,7 +408,7 @@ class BeRocket_aapf_variations_tables_addon extends BeRocket_framework_addon_lib
         INDEX term_taxonomy_id (term_taxonomy_id),
         INDEX term_taxonomy_child_id (term_taxonomy_child_id),
         INDEX child_parent_id (term_taxonomy_id, term_taxonomy_child_id),
-        UNIQUE uniqueid (term_taxonomy_id, term_id, term_taxonomy_child_id, term_child_id)
+        PRIMARY KEY (term_taxonomy_id, term_id, term_taxonomy_child_id, term_child_id)
         ) $collate;";
         $query_status = dbDelta( $sql );
         $this->save_query_error($sql, $query_status);
@@ -440,7 +440,7 @@ class BeRocket_aapf_variations_tables_addon extends BeRocket_framework_addon_lib
         attribute varchar(32) NOT NULL,
         INDEX post_id (post_id),
         INDEX attribute (attribute),
-        UNIQUE uniqueid (post_id, attribute)
+        PRIMARY KEY (post_id, attribute)
         ) $collate;";
         $query_status = dbDelta( $sql );
         $this->save_query_error($sql, $query_status);
@@ -458,9 +458,10 @@ class BeRocket_aapf_variations_tables_addon extends BeRocket_framework_addon_lib
         meta_value_id bigint(20) NOT NULL,
         stock_status tinyint(2),
         INDEX post_id (post_id),
+        INDEX parent_id (parent_id),
         INDEX meta_key (meta_key),
         INDEX meta_value_id (meta_value_id),
-        UNIQUE uniqueid (post_id, meta_key, meta_value_id)
+        PRIMARY KEY (post_id, meta_key, meta_value_id)
         ) $collate;";
         $query_status = dbDelta( $sql );
         $this->save_query_error($sql, $query_status);

@@ -120,7 +120,7 @@ var YITH_WCAN_Filter = /*#__PURE__*/function () {
       this.filtered = filters && !!Object.keys(filters).length;
       this.filtered ? $body.addClass('filtered') : $body.removeClass('filtered');
       $(window).trigger('scroll');
-      $(document).trigger('yith-wcan-ajax-filtered', [response, filters]).trigger('yith_wcwl_reload_fragments');
+      $(document).trigger('yith-wcan-ajax-filtered', [response, filters]).trigger('yith_wcwl_reload_after_ajax');
     }
 
     // build url to show

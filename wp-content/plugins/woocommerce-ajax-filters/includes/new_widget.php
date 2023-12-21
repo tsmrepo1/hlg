@@ -2,18 +2,33 @@
 class BeRocket_new_AAPF_Widget extends WP_Widget 
 {
     public function __construct() {
-        parent::__construct("berocket_aapf_group", __("AAPF Filters Group", 'BeRocket_AJAX_domain'),
+        parent::__construct("berocket_aapf_group", __("Filters Group BeRocket", 'BeRocket_AJAX_domain'),
             array("description" => __("AJAX Product Filters. Group of filters", 'BeRocket_AJAX_domain')));
     }
     public function widget($args, $instance) {
         if( ! self::check_widget_by_instance($instance) ) {
             return false;
         }
-        $current_language = apply_filters( 'wpml_current_language', NULL );
-        $instance['group_id'] = apply_filters( 'wpml_object_id', $instance['group_id'], 'page', true, $current_language );
-        $BeRocket_AAPF_group_filters = BeRocket_AAPF_group_filters::getInstance();
-        $filters = $BeRocket_AAPF_group_filters->get_option($instance['group_id']);
-        $filters['group_id'] = $instance['group_id'];
+        if( ! empty($instance['group_id']) ) {
+            $current_language = apply_filters( 'wpml_current_language', NULL );
+            $instance['group_id'] = apply_filters( 'wpml_object_id', $instance['group_id'], 'page', true, $current_language );
+            $BeRocket_AAPF_group_filters = BeRocket_AAPF_group_filters::getInstance();
+            $filters = $BeRocket_AAPF_group_filters->get_option($instance['group_id']);
+            $filters['group_id'] = $instance['group_id'];
+        } else {
+            $instance['group_id'] = 0;
+            $filters = array();
+        }
+        if( ! empty($instance['filters']) && is_array($instance['filters']) ) {
+            if( ! empty($filters['filters']) && is_array($filters['filters']) ) {
+                $instance['filters'] = array_merge($instance['filters'], $filters['filters']);
+            } else {
+                $instance['filters'] = $instance['filters'];
+            }
+        } elseif( isset($instance['filters']) ) {
+            unset($instance['filters']);
+        }
+        $filters = array_merge($filters, $instance);
         global $wp_registered_sidebars;
         $is_shortcode = empty($args['id']) || ! isset($wp_registered_sidebars[$args['id']]);
         $new_args = $args;
@@ -64,7 +79,7 @@ class BeRocket_new_AAPF_Widget extends WP_Widget
         }
     }
     public static function check_widget_by_instance($instance) {
-        if( empty($instance['group_id']) || get_post_status($instance['group_id']) != 'publish' ) {
+        if( ( empty($instance['group_id']) || get_post_status($instance['group_id']) != 'publish' ) && empty($instance['filters']) ) {
             return false;
         }
         $BeRocket_AAPF = BeRocket_AAPF::getInstance();
@@ -72,10 +87,21 @@ class BeRocket_new_AAPF_Widget extends WP_Widget
         if( ! empty($br_options['filters_turn_off']) ) {
             return false;
         }
-        $current_language = apply_filters( 'wpml_current_language', NULL );
-        $instance['group_id'] = apply_filters( 'wpml_object_id', $instance['group_id'], 'page', true, $current_language );
-        $BeRocket_AAPF_group_filters = BeRocket_AAPF_group_filters::getInstance();
-        $filters = $BeRocket_AAPF_group_filters->get_option($instance['group_id']);
+        if( empty($instance['group_id']) ) {
+            $filters = array();
+        } else {
+            $current_language = apply_filters( 'wpml_current_language', NULL );
+            $instance['group_id'] = apply_filters( 'wpml_object_id', $instance['group_id'], 'page', true, $current_language );
+            $BeRocket_AAPF_group_filters = BeRocket_AAPF_group_filters::getInstance();
+            $filters = $BeRocket_AAPF_group_filters->get_option($instance['group_id']);
+        }
+        if( ! empty($instance['filters']) && is_array($instance['filters']) ) {
+            if( ! empty($filters['filters']) && is_array($filters['filters']) ) {
+                $filters['filters'] = array_merge($instance['filters'], $filters['filters']);
+            } else {
+                $filters['filters'] = $instance['filters'];
+            }
+        }
         global $braapf_parameters;
         if( $braapf_parameters['do_not_display_filters'] ) {
             braapf_is_filters_displayed_debug($instance['group_id'], 'group', 'disabled', 'Custom parameter do_not_display_filters');
@@ -85,7 +111,7 @@ class BeRocket_new_AAPF_Widget extends WP_Widget
             braapf_is_filters_displayed_debug($instance['group_id'], 'group', 'empty_options', 'Options data from database empty');
             return false;
         }
-        if( has_term('isdisabled', 'berocket_taxonomy_data', intval($instance['group_id'])) ) {
+        if( ! empty($instance['group_id']) && has_term('isdisabled', 'berocket_taxonomy_data', intval($instance['group_id'])) ) {
             braapf_is_filters_displayed_debug($instance['group_id'], 'group', 'disabled', 'Disabled by user');
             return false;
         }
@@ -146,7 +172,7 @@ class BeRocket_new_AAPF_Widget extends WP_Widget
 class BeRocket_new_AAPF_Widget_single extends WP_Widget 
 {
     public function __construct() {
-        parent::__construct("berocket_aapf_single", __("AAPF Filter Single", 'BeRocket_AJAX_domain'),
+        parent::__construct("berocket_aapf_single", __("Filter Single BeRocket", 'BeRocket_AJAX_domain'),
             array("description" => __("AJAX Product Filters. Single Filter", 'BeRocket_AJAX_domain')));
     }
     public function widget($args, $instance) {

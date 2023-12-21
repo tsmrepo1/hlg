@@ -238,7 +238,7 @@ function braapf_filtered_filters_set() {
         var pagination_links = the_ajax_script.pagination_class;
         pagination_links = pagination_links.replace(',', ' a,');
         pagination_links = berocket_apply_filters('pagination_links_a_tags', pagination_links+' a', the_ajax_script.pagination_class);
-        if( !the_ajax_script.disable_ajax_loading && the_ajax_script.pagination_ajax ) {
+        if( !the_ajax_script.disable_ajax_loading && the_ajax_script.pagination_ajax && $(the_ajax_script.products_holder_id).length ) {
             $(document).on('click', pagination_links, function(event) {
                 event.preventDefault();
                 var href = $(this).attr('href');
@@ -475,10 +475,12 @@ function braapf_filtered_filters_set() {
         }
         var query_arr = [],
             page = 1,
-            search_page = link.match(/\/page\/(\d+)/);
+            string_regex = the_ajax_script.pagination_base+'\\/(\\d+)',
+            regex_var = new RegExp(string_regex),
+            search_page = link.match(regex_var);
         if( search_page && typeof(search_page[1]) == 'string' ) {
             page = parseInt(search_page[1]);
-            link = link.replace(/\/page\/(\d+)/, '');
+            link = link.replace(regex_var, '');
         }
         query = query.split('&');
         $.each(query, function(i, val) {
@@ -652,18 +654,16 @@ function braapf_filtered_filters_set() {
             history.pathname = new_url;
         }
     }
-    if( berocket_apply_filters('load_products_ajax_on_popstate', true) ) {
-        window.addEventListener("popstate", function(event) {
-            if ( event.state != null && event.state.BeRocket == 'Rules' ) {
-                var url = location.href;
-                if( berocket_apply_filters('page_has_products_holder', (! $(the_ajax_script.products_holder_id).length), url) ) {
-                    location.href = url;
-                } else {
-                    braapf_ajax_load_from_url(url, {}, berocket_apply_filters('ajax_load_from_filters', {done:[braapf_replace_products, braapf_replace_pagination, braapf_replace_result_count, braapf_replace_orderby, braapf_replace_each_filter, braapf_init_load, braapf_filtered_filters_set, braapf_update_data_from_current]}, url, 'default'));
-                }
+    window.addEventListener("popstate", function(event) {
+        if ( berocket_apply_filters('load_products_ajax_on_popstate', true) && event.state != null && event.state.BeRocket == 'Rules' ) {
+            var url = location.href;
+            if( berocket_apply_filters('page_has_products_holder', (! $(the_ajax_script.products_holder_id).length), url) ) {
+                location.href = url;
+            } else {
+                braapf_ajax_load_from_url(url, {}, berocket_apply_filters('ajax_load_from_filters', {done:[braapf_replace_products, braapf_replace_pagination, braapf_replace_result_count, braapf_replace_orderby, braapf_replace_each_filter, braapf_init_load, braapf_filtered_filters_set, braapf_update_data_from_current]}, url, 'default'));
             }
-        });
-    }
+        }
+    });
     //Load data from URL
     braapf_ajax_load_from_url = function(url, send_data, callback_func, type) {
         if( typeof(type) == 'undefined' ) {
@@ -1438,23 +1438,25 @@ braapf_jqrui_slidr_ion_values_link_arr_attr;
     braapf_grab_single_ion = function(single_data, element) {
         if( element.is('.bapf_slidr_ion.bapf_slidr_ready') && single_data != false ) {
             var data = element.find(".bapf_slidr_main").data('ionRangeSlider');
-            var $slider = element.find('.bapf_slidr_main');
-            var values = [data.options.from, data.options.to];
-            var input_values = [berocket_apply_filters('jqrui_slidr_ion_'+$slider.data('display'), data.options.from, $slider), berocket_apply_filters('jqrui_slidr_ion_'+$slider.data('display'), data.options.to, $slider)];
-            var prefix = $slider.data('prefix');
-            if( typeof(prefix) == 'undefined' ) {
-                prefix = '';
-            }
-            var postfix = $slider.data('postfix');
-            if( typeof(postfix) == 'undefined' ) {
-                postfix = '';
-            }
-            input_values[0] = prefix + input_values[0] + postfix;
-            input_values[1] = prefix + input_values[1] + postfix;
-            if( values[0] != $slider.data('min') || values[1] != $slider.data('max') ) {
-                var value_ready = {value:values[0]+'_'+values[1], html:input_values[0]+' - '+input_values[1]};
-                value_ready = berocket_apply_filters('jqrui_slidr_ion_link_'+$slider.data('display'), value_ready, values, input_values, $slider, single_data);
-                single_data.values = [value_ready];
+            if( typeof(data) != 'undefined' ) {
+                var $slider = element.find('.bapf_slidr_main');
+                var values = [data.options.from, data.options.to];
+                var input_values = [berocket_apply_filters('jqrui_slidr_ion_'+$slider.data('display'), data.options.from, $slider), berocket_apply_filters('jqrui_slidr_ion_'+$slider.data('display'), data.options.to, $slider)];
+                var prefix = $slider.data('prefix');
+                if( typeof(prefix) == 'undefined' ) {
+                    prefix = '';
+                }
+                var postfix = $slider.data('postfix');
+                if( typeof(postfix) == 'undefined' ) {
+                    postfix = '';
+                }
+                input_values[0] = prefix + input_values[0] + postfix;
+                input_values[1] = prefix + input_values[1] + postfix;
+                if( values[0] != $slider.data('min') || values[1] != $slider.data('max') ) {
+                    var value_ready = {value:values[0]+'_'+values[1], html:input_values[0]+' - '+input_values[1]};
+                    value_ready = berocket_apply_filters('jqrui_slidr_ion_link_'+$slider.data('display'), value_ready, values, input_values, $slider, single_data);
+                    single_data.values = [value_ready];
+                }
             }
         }
         return single_data;

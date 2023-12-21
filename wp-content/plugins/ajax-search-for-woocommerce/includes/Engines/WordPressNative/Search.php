@@ -144,14 +144,18 @@ class Search
      *
      * @param string $phrase Search phrase.
      * @param bool $return Whether to return the results.
-     * @param string $context Search context: 'autocomplete' or 'all-results'.
+     * @param string $context Search context: 'autocomplete' or 'product-ids'.
      *
      * @return mixed|void
      */
     public function getSearchResults( $phrase = '', $return = false, $context = 'autocomplete' )
     {
+        if ( $context === 'all-results' ) {
+            $context = 'product-ids';
+        }
         $start = microtime( true );
         $lang = '';
+        $hits = 0;
         if ( Multilingual::isMultilingual() ) {
             $lang = Multilingual::getCurrentLanguage();
         }
@@ -170,13 +174,9 @@ class Search
         $output = array();
         $results = array();
         $keyword = '';
-        $remote = false;
         
         if ( $return ) {
             $keyword = sanitize_text_field( $phrase );
-            if ( $context === 'all-results' ) {
-                $remote = true;
-            }
         } else {
             // Compatible with v1.1.7
             if ( !empty($_REQUEST['dgwt_wcas_keyword']) ) {
@@ -185,26 +185,36 @@ class Search
             if ( !empty($_REQUEST['s']) ) {
                 $keyword = sanitize_text_field( $_REQUEST['s'] );
             }
-            if ( !empty($_REQUEST['remote']) ) {
-                $remote = true;
-            }
         }
         
         $keyword = apply_filters( 'dgwt/wcas/phrase', $keyword );
+        // Break early if keyword contains blacklisted phrase.
+        if ( Helpers::phraseContainsBlacklistedTerm( $keyword ) ) {
+            
+            if ( $return ) {
+                return $this->getEmptyOutput();
+            } else {
+                echo  json_encode( Helpers::noResultsSuggestion( $this->getEmptyOutput() ) ) ;
+                die;
+            }
+        
+        }
         /* SEARCH IN WOO CATEGORIES */
         
-        if ( !$remote && array_key_exists( 'tax_product_cat', $this->groups ) ) {
+        if ( $context === 'autocomplete' && array_key_exists( 'tax_product_cat', $this->groups ) ) {
             $limit = ( $this->flexibleLimits ? $this->totalLimit : $this->groups['tax_product_cat']['limit'] );
             $categories = $this->getCategories( $keyword, $limit );
-            $this->groups['tax_product_cat']['results'] = $categories;
+            $this->groups['tax_product_cat']['results'] = $categories['items'];
+            $hits += $categories['total'];
         }
         
         /* SEARCH IN WOO TAGS */
         
-        if ( !$remote && array_key_exists( 'tax_product_tag', $this->groups ) ) {
+        if ( $context === 'autocomplete' && array_key_exists( 'tax_product_tag', $this->groups ) ) {
             $limit = ( $this->flexibleLimits ? $this->totalLimit : $this->groups['tax_product_tag']['limit'] );
             $tags = $this->getTags( $keyword, $limit );
-            $this->groups['tax_product_tag']['results'] = $tags;
+            $this->groups['tax_product_tag']['results'] = $tags['items'];
+            $hits += $tags['total'];
         }
         
         /* SEARCH IN PRODUCTS */
@@ -230,11 +240,13 @@ class Search
             
             $args = apply_filters( 'dgwt/wcas/search_query/args', $args );
             $products = get_posts( $args );
+            $products = apply_filters( 'dgwt/wcas/search_results/products_raw', $products );
             $totalProducts = count( $products );
+            $hits += $totalProducts;
             do_action(
-                'dgwt/wcas/after_searching/products',
+                'dgwt/wcas/analytics/after_searching',
                 $keyword,
-                $totalProducts,
+                $hits,
                 $lang
             );
             
@@ -243,7 +255,7 @@ class Search
                 $i = 0;
                 foreach ( $products as $post ) {
                     
-                    if ( $remote ) {
+                    if ( $context === 'product-ids' ) {
                         $orderedProducts[$i] = new \stdClass();
                         $orderedProducts[$i]->ID = $post->ID;
                     } else {
@@ -262,9 +274,9 @@ class Search
                 }
                 // Sort by relevance
                 usort( $orderedProducts, array( 'DgoraWcas\\Helpers', 'cmpSimilarity' ) );
-                // Response for remote requests
+                // Response that returns all results.
                 
-                if ( $remote ) {
+                if ( $context === 'product-ids' ) {
                     $output['suggestions'] = $orderedProducts;
                     $output['time'] = number_format(
                         microtime( true ) - $start,
@@ -283,72 +295,18 @@ class Search
                 
                 }
                 
-                $relevantProducts = array();
                 $productsSlots = ( $this->flexibleLimits ? $this->totalLimit : $this->groups['product']['limit'] );
-                foreach ( $orderedProducts as $post ) {
-                    $product = new Product( $post );
-                    if ( !$product->isCorrect() ) {
-                        continue;
-                    }
-                    // Strip <script> and <style> tags along with their contents.
-                    $value = preg_replace( '@<(script|style)[^>]*?>.*?</\\1>@si', '', $product->getName() );
-                    // Strip remaining tags except those indicated.
-                    $value = html_entity_decode( wp_kses( $value, array(
-                        'b'      => array(
-                        'class' => true,
-                    ),
-                        'br'     => array(),
-                        'span'   => array(
-                        'class' => true,
-                    ),
-                        'strong' => array(
-                        'class' => true,
-                    ),
-                        'sub'    => array(),
-                        'sup'    => array(),
-                    ) ) );
-                    $r = array(
-                        'post_id' => $product->getID(),
-                        'value'   => $value,
-                        'url'     => $product->getPermalink(),
-                        'type'    => 'product',
-                    );
-                    // Get thumb HTML
-                    if ( DGWT_WCAS()->settings->getOption( 'show_product_image' ) === 'on' ) {
-                        $r['thumb_html'] = $product->getThumbnail();
-                    }
-                    // Get price
-                    if ( DGWT_WCAS()->settings->getOption( 'show_product_price' ) === 'on' ) {
-                        $r['price'] = $product->getPriceHTML();
-                    }
-                    // Get description
-                    
-                    if ( DGWT_WCAS()->settings->getOption( 'show_product_desc' ) === 'on' ) {
-                        $wordsLimit = 0;
-                        if ( DGWT_WCAS()->settings->getOption( 'show_details_box' ) === 'on' ) {
-                            $wordsLimit = 15;
-                        }
-                        $r['desc'] = $product->getDescription( 'suggestions', $wordsLimit );
-                    }
-                    
-                    // Get SKU
-                    if ( DGWT_WCAS()->settings->getOption( 'show_product_sku' ) === 'on' ) {
-                        $r['sku'] = $product->getSKU();
-                    }
-                    // Is on sale
-                    //					if ( DGWT_WCAS()->settings->getOption( 'show_sale_badge' ) === 'on' ) {
-                    //						$r[ 'on_sale' ] = $product->is_on_sale();
-                    //					}
-                    // Is featured
-                    //					if ( DGWT_WCAS()->settings->getOption( 'show_featured_badge' ) === 'on' ) {
-                    //						$r[ 'featured' ] = $product->is_featured();
-                    //					}
-                    $relevantProducts[] = apply_filters( 'dgwt/wcas/search_results/products', $r, $product );
-                    $productsSlots--;
-                    if ( $productsSlots === 0 ) {
-                        break;
-                    }
+                $fields = [];
+                if ( DGWT_WCAS()->settings->getOption( 'show_product_image' ) === 'on' ) {
+                    $fields[] = 'thumb_html';
                 }
+                if ( DGWT_WCAS()->settings->getOption( 'show_product_price' ) === 'on' ) {
+                    $fields[] = 'price';
+                }
+                if ( DGWT_WCAS()->settings->getOption( 'show_product_sku' ) === 'on' ) {
+                    $fields[] = 'sku';
+                }
+                $relevantProducts = $this->getProductsData( $orderedProducts, $productsSlots, $fields );
             }
             
             wp_reset_postdata();
@@ -359,7 +317,7 @@ class Search
             $this->groups['product']['results'] = $relevantProducts;
         }
         
-        if ( $this->hasResutls() ) {
+        if ( $this->hasResults() ) {
             if ( $this->flexibleLimits ) {
                 $this->applyFlexibleLimits();
             }
@@ -379,7 +337,7 @@ class Search
             }
         } else {
             
-            if ( $remote ) {
+            if ( $context === 'product-ids' ) {
                 $emptyResult = new \stdClass();
                 $emptyResult->ID = 0;
                 $results[] = $emptyResult;
@@ -393,7 +351,7 @@ class Search
         }
         
         $output['suggestions'] = $results;
-        $output['total'] = $totalProducts;
+        $output['total'] = $hits;
         $output['time'] = number_format(
             microtime( true ) - $start,
             2,
@@ -411,6 +369,76 @@ class Search
             die;
         }
     
+    }
+    
+    public function getProductsData( $orderedProducts, $limit = -1, $fields = array() )
+    {
+        $relevantProducts = array();
+        foreach ( $orderedProducts as $post ) {
+            $product = new Product( $post );
+            if ( !$product->isCorrect() ) {
+                continue;
+            }
+            // Strip <script> and <style> tags along with their contents.
+            $value = preg_replace( '@<(script|style)[^>]*?>.*?</\\1>@si', '', $product->getName() );
+            // Strip remaining tags except those indicated.
+            $value = html_entity_decode( wp_kses( $value, array(
+                'b'      => array(
+                'class' => true,
+            ),
+                'br'     => array(),
+                'span'   => array(
+                'class' => true,
+            ),
+                'strong' => array(
+                'class' => true,
+            ),
+                'sub'    => array(),
+                'sup'    => array(),
+            ) ) );
+            $r = array(
+                'post_id' => $product->getID(),
+                'value'   => $value,
+                'url'     => $product->getPermalink(),
+                'type'    => 'product',
+            );
+            // Get thumb HTML
+            if ( in_array( 'thumb_html', $fields, true ) ) {
+                $r['thumb_html'] = $product->getThumbnail();
+            }
+            // Get price
+            if ( in_array( 'price', $fields, true ) ) {
+                $r['price'] = $product->getPriceHTML();
+            }
+            // Get description
+            
+            if ( DGWT_WCAS()->settings->getOption( 'show_product_desc' ) === 'on' ) {
+                $wordsLimit = 0;
+                if ( DGWT_WCAS()->settings->getOption( 'show_details_box' ) === 'on' ) {
+                    $wordsLimit = 15;
+                }
+                $r['desc'] = $product->getDescription( 'suggestions', $wordsLimit );
+            }
+            
+            // Get SKU
+            if ( in_array( 'sku', $fields, true ) ) {
+                $r['sku'] = $product->getSKU();
+            }
+            // Is on sale
+            //					if ( DGWT_WCAS()->settings->getOption( 'show_sale_badge' ) === 'on' ) {
+            //						$r[ 'on_sale' ] = $product->is_on_sale();
+            //					}
+            // Is featured
+            //					if ( DGWT_WCAS()->settings->getOption( 'show_featured_badge' ) === 'on' ) {
+            //						$r[ 'featured' ] = $product->is_featured();
+            //					}
+            $relevantProducts[] = apply_filters( 'dgwt/wcas/search_results/products', $r, $product );
+            $limit--;
+            if ( $limit === 0 ) {
+                break;
+            }
+        }
+        return $relevantProducts;
     }
     
     /**
@@ -488,7 +516,10 @@ class Search
      */
     public function getCategories( $keyword, $limit = 3 )
     {
-        $results = array();
+        $results = array(
+            'total' => 0,
+            'items' => array(),
+        );
         $args = array(
             'taxonomy' => 'product_cat',
         );
@@ -500,11 +531,12 @@ class Search
             
             if ( $i < $limit ) {
                 $catName = html_entity_decode( $cat->name );
-                $pos = strpos( mb_strtolower( $catName ), mb_strtolower( $keywordUnslashed ) );
+                $pos = strpos( mb_strtolower( remove_accents( Helpers::removeGreekAccents( $catName ) ) ), mb_strtolower( remove_accents( Helpers::removeGreekAccents( $keywordUnslashed ) ) ) );
                 
                 if ( $pos !== false ) {
+                    $results['total']++;
                     $termLang = Multilingual::getTermLang( $cat->term_id, 'product_cat' );
-                    $results[$i] = array(
+                    $results['items'][$i] = array(
                         'term_id'     => $cat->term_id,
                         'taxonomy'    => 'product_cat',
                         'value'       => $catName,
@@ -519,8 +551,8 @@ class Search
                         'type'        => 'taxonomy',
                     );
                     // Fix: Remove last separator
-                    if ( !empty($results[$i]['breadcrumbs']) ) {
-                        $results[$i]['breadcrumbs'] = mb_substr( $results[$i]['breadcrumbs'], 0, -3 );
+                    if ( !empty($results['items'][$i]['breadcrumbs']) ) {
+                        $results['items'][$i]['breadcrumbs'] = mb_substr( $results['items'][$i]['breadcrumbs'], 0, -3 );
                     }
                     $i++;
                 }
@@ -541,7 +573,10 @@ class Search
      */
     public function getTags( $keyword, $limit = 3 )
     {
-        $results = array();
+        $results = array(
+            'total' => 0,
+            'items' => array(),
+        );
         $args = array(
             'taxonomy' => 'product_tag',
         );
@@ -553,10 +588,11 @@ class Search
             
             if ( $i < $limit ) {
                 $tagName = html_entity_decode( $tag->name );
-                $pos = strpos( mb_strtolower( $tagName ), mb_strtolower( $keywordUnslashed ) );
+                $pos = strpos( mb_strtolower( remove_accents( Helpers::removeGreekAccents( $tagName ) ) ), mb_strtolower( remove_accents( Helpers::removeGreekAccents( $keywordUnslashed ) ) ) );
                 
                 if ( $pos !== false ) {
-                    $results[$i] = array(
+                    $results['total']++;
+                    $results['items'][$i] = array(
                         'term_id'  => $tag->term_id,
                         'taxonomy' => 'product_tag',
                         'value'    => $tagName,
@@ -719,7 +755,14 @@ class Search
         if ( $this->hooked ) {
             return;
         }
-        $this->hooked = true;
+        /**
+         * Allowing hook WP_Query more then once
+         *
+         * @since 1.26.0
+         */
+        if ( apply_filters( 'dgwt/wcas/native/hook_query_once', true ) ) {
+            $this->hooked = true;
+        }
         /**
          * Disable cache: `cache_results` defaults to false but can be enabled
          */
@@ -729,6 +772,14 @@ class Search
         }
         $query->set( 'dgwt_wcas', $query->query_vars['s'] );
         $phrase = $query->query_vars['s'];
+        // Break early if keyword contains blacklisted phrase.
+        
+        if ( Helpers::phraseContainsBlacklistedTerm( $phrase ) ) {
+            header( 'X-Robots-Tag: noindex' );
+            http_response_code( 400 );
+            exit;
+        }
+        
         $orderby = 'post__in';
         $order = 'desc';
         if ( !empty($query->query_vars['orderby']) ) {
@@ -738,7 +789,7 @@ class Search
             $order = strtolower( $query->query_vars['order'] );
         }
         $postIn = array();
-        $searchResults = $this->getSearchResults( $phrase, true, 'all-results' );
+        $searchResults = $this->getSearchResults( $phrase, true, 'product-ids' );
         foreach ( $searchResults['suggestions'] as $suggestion ) {
             $postIn[] = $suggestion->ID;
         }
@@ -788,18 +839,18 @@ class Search
      *
      * @return bool
      */
-    public function hasResutls()
+    public function hasResults()
     {
-        $hasResutls = false;
+        $hasResults = false;
         foreach ( $this->groups as $group ) {
             
             if ( !empty($group['results']) ) {
-                $hasResutls = true;
+                $hasResults = true;
                 break;
             }
         
         }
-        return $hasResutls;
+        return $hasResults;
     }
     
     /**
@@ -1024,6 +1075,23 @@ class Search
         }
         
         return $url;
+    }
+    
+    /**
+     * Get empty search output
+     *
+     * @return array
+     */
+    private function getEmptyOutput()
+    {
+        $output = array(
+            'engine'      => 'free',
+            'suggestions' => array(),
+            'time'        => '0 sec',
+            'total'       => 0,
+            'v'           => DGWT_WCAS_VERSION,
+        );
+        return $output;
     }
 
 }

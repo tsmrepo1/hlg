@@ -13,7 +13,7 @@ if ( ! class_exists( 'YIT_Assets' ) ) {
 	/**
 	 * YIT_Assets class.
 	 *
-	 * @author     Leanza Francesco <leanzafrancesco@gmail.com>
+	 * @author     YITH <plugins@yithemes.com>
 	 */
 	class YIT_Assets {
 		/**
@@ -44,8 +44,7 @@ if ( ! class_exists( 'YIT_Assets' ) ) {
 		 */
 		private function __construct() {
 			$this->version = yith_plugin_fw_get_version();
-			add_action( 'admin_enqueue_scripts', array( $this, 'register_common_scripts' ) );
-			add_action( 'wp_enqueue_scripts', array( $this, 'register_common_scripts' ) );
+			add_action( 'init', array( $this, 'register_common_scripts' ) );
 			add_action( 'elementor/editor/before_enqueue_styles', array( $this, 'register_common_scripts' ) );
 
 			add_action( 'admin_enqueue_scripts', array( $this, 'register_styles_and_scripts' ) );
@@ -76,7 +75,7 @@ if ( ! class_exists( 'YIT_Assets' ) ) {
 			wp_register_script( 'yith-date-format', YIT_CORE_PLUGIN_URL . '/assets/js/yith-date-format' . $suffix . '.js', array( 'jquery', 'jquery-ui-datepicker' ), $this->version, true );
 
 			wp_register_script( 'yit-metabox', YIT_CORE_PLUGIN_URL . '/assets/js/metabox' . $suffix . '.js', array( 'jquery', 'wp-color-picker', 'yith-plugin-fw-fields', 'yith-ui' ), $this->version, true );
-			wp_register_script( 'yit-plugin-panel', YIT_CORE_PLUGIN_URL . '/assets/js/yit-plugin-panel' . $suffix . '.js', array( 'jquery', 'wp-color-picker', 'jquery-ui-sortable', 'yith-plugin-fw-fields', 'yith-ui' ), $this->version, true );
+			wp_register_script( 'yit-plugin-panel', YIT_CORE_PLUGIN_URL . '/assets/js/yit-plugin-panel' . $suffix . '.js', array( 'jquery', 'wp-color-picker', 'jquery-ui-sortable', 'yith-plugin-fw-fields', 'yith-ui', 'utils', 'jquery-blockui' ), $this->version, true );
 			wp_register_script( 'colorbox', YIT_CORE_PLUGIN_URL . '/assets/js/jquery.colorbox' . $suffix . '.js', array( 'jquery' ), '1.6.3', true );
 			wp_register_script( 'yith_how_to', YIT_CORE_PLUGIN_URL . '/assets/js/how-to' . $suffix . '.js', array( 'jquery' ), $this->version, true );
 			wp_register_script( 'yith-plugin-fw-wp-pages', YIT_CORE_PLUGIN_URL . '/assets/js/wp-pages' . $suffix . '.js', array( 'jquery' ), $this->version, false );
@@ -85,7 +84,8 @@ if ( ! class_exists( 'YIT_Assets' ) ) {
 
 			// Register styles.
 			wp_register_style( 'yith-plugin-ui', YIT_CORE_PLUGIN_URL . '/assets/css/yith-plugin-ui.css', array( 'yith-plugin-fw-icon-font' ), $this->version );
-			wp_register_style( 'yit-plugin-style', YIT_CORE_PLUGIN_URL . '/assets/css/yit-plugin-panel.css', array( 'yith-plugin-ui' ), $this->version );
+			wp_register_style( 'yit-plugin-style', YIT_CORE_PLUGIN_URL . '/assets/css/yit-plugin-panel.css', array( 'yith-plugin-ui' ), $this->version ); // TODO: to remove. Deprecated since 4.0.0!
+			wp_register_style( 'yith-plugin-panel', YIT_CORE_PLUGIN_URL . '/assets/css/yith-plugin-panel.css', array( 'yith-plugin-ui' ), $this->version );
 			wp_register_style( 'jquery-ui-style', YIT_CORE_PLUGIN_URL . '/assets/css/jquery-ui/jquery-ui.min.css', array(), '1.11.4' );
 			wp_register_style( 'colorbox', YIT_CORE_PLUGIN_URL . '/assets/css/colorbox.css', array(), $this->version );
 			wp_register_style( 'yit-upgrade-to-pro', YIT_CORE_PLUGIN_URL . '/assets/css/yit-upgrade-to-pro.css', array( 'colorbox' ), $this->version );
@@ -132,6 +132,11 @@ if ( ! class_exists( 'YIT_Assets' ) ) {
 				array(
 					'admin_url' => admin_url( 'admin.php' ),
 					'ajax_url'  => admin_url( 'admin-ajax.php' ),
+					'i18n'      => array(
+						'error'           => _x( 'Error', 'Title', 'yith-plugin-fw' ),
+						'noFileError'     => __( 'No file provided.', 'yith-plugin-fw' ),
+						'cannotDropError' => __( 'You cannot drop files here.', 'yith-plugin-fw' ),
+					),
 				)
 			);
 
@@ -169,6 +174,17 @@ if ( ! class_exists( 'YIT_Assets' ) ) {
 				'yith_bh_onboarding',
 				array(
 					'ajax_url' => admin_url( 'admin-ajax.php' ),
+				)
+			);
+
+			wp_localize_script(
+				'yit-plugin-panel',
+				'yithFwPluginPanel',
+				array(
+					'i18n' => array(
+						'resetConfirmTitle'   => __( 'Are you sure?', 'yith-plugin-fw' ),
+						'resetConfirmMessage' => __( 'If you continue with this action, you will reset all options in this page.', 'yith-plugin-fw' ),
+					),
 				)
 			);
 

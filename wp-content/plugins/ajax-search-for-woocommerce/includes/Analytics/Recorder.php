@@ -14,7 +14,7 @@ class Recorder
     {
         Database::registerTables();
         add_action(
-            'dgwt/wcas/after_searching/products',
+            'dgwt/wcas/analytics/after_searching',
             array( $this, 'listener' ),
             10,
             3
@@ -62,11 +62,11 @@ class Recorder
                 }
             }
         }
-        if ( Helpers::isProductSearchPage() || Helpers::isRemoteSearchRequest() ) {
+        if ( Helpers::isProductSearchPage() ) {
             $autocomplete = false;
         }
         $phrase = strtolower( substr( $phrase, 0, 255 ) );
-        $lang = ( !empty($lang) && Multilingual::isLangCode( strtolower( $lang ) ) ? strtolower( $lang ) : '' );
+        $lang = ( !empty($lang) && Multilingual::isLangCode( $lang ) ? $lang : '' );
         $this->push(
             $phrase,
             $hits,

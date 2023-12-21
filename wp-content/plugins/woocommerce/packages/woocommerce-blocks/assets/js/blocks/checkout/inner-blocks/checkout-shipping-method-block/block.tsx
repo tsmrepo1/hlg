@@ -9,14 +9,27 @@ import {
 } from 'wordpress-components';
 import classnames from 'classnames';
 import { Icon, store, shipping } from '@wordpress/icons';
+import { useEffect } from '@wordpress/element';
+import { CART_STORE_KEY, VALIDATION_STORE_KEY } from '@woocommerce/block-data';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { isPackageRateCollectable } from '@woocommerce/base-utils';
+import { getSetting } from '@woocommerce/settings';
 
 /**
  * Internal dependencies
  */
-import './style.scss';
 import { RatePrice, getLocalPickupPrices, getShippingPrices } from './shared';
 import type { minMaxPrices } from './shared';
 import { defaultLocalPickupText, defaultShippingText } from './constants';
+import { shippingAddressHasValidationErrors } from '../../../../data/cart/utils';
+
+const SHIPPING_RATE_ERROR = {
+	hidden: true,
+	message: __(
+		'Shipping options are not available',
+		'woo-gutenberg-products-block'
+	),
+};
 
 const LocalPickupSelector = ( {
 	checked,
@@ -71,15 +84,45 @@ const ShippingSelector = ( {
 	showPrice,
 	showIcon,
 	toggleText,
+	shippingCostRequiresAddress = false,
 }: {
 	checked: string;
 	rate: minMaxPrices;
 	showPrice: boolean;
 	showIcon: boolean;
+	shippingCostRequiresAddress: boolean;
 	toggleText: string;
 } ) => {
+	const hasShippableRates = useSelect( ( select ) => {
+		const rates = select( CART_STORE_KEY ).getShippingRates();
+		return rates.some(
+			( { shipping_rates: shippingRate } ) =>
+				! shippingRate.every( isPackageRateCollectable )
+		);
+	} );
+	const rateShouldBeHidden =
+		shippingCostRequiresAddress &&
+		shippingAddressHasValidationErrors() &&
+		! hasShippableRates;
+	const hasShippingPrices = rate.min !== undefined && rate.max !== undefined;
+	const { setValidationErrors, clearValidationError } =
+		useDispatch( VALIDATION_STORE_KEY );
+	useEffect( () => {
+		if ( checked === 'shipping' && ! hasShippingPrices ) {
+			setValidationErrors( {
+				'shipping-rates-error': SHIPPING_RATE_ERROR,
+			} );
+		} else {
+			clearValidationError( 'shipping-rates-error' );
+		}
+	}, [
+		checked,
+		clearValidationError,
+		hasShippingPrices,
+		setValidationErrors,
+	] );
 	const Price =
-		rate.min === undefined ? (
+		rate.min === undefined || rateShouldBeHidden ? (
 			<span className="wc-block-checkout__shipping-method-option-price">
 				{ __(
 					'calculated with an address',
@@ -131,6 +174,10 @@ const Block = ( {
 	shippingText: string;
 } ): JSX.Element | null => {
 	const { shippingRates } = useShippingData();
+	const shippingCostRequiresAddress = getSetting< boolean >(
+		'shippingCostRequiresAddress',
+		false
+	);
 
 	return (
 		<RadioGroup
@@ -145,6 +192,7 @@ const Block = ( {
 				rate={ getShippingPrices( shippingRates[ 0 ]?.shipping_rates ) }
 				showPrice={ showPrice }
 				showIcon={ showIcon }
+				shippingCostRequiresAddress={ shippingCostRequiresAddress }
 				toggleText={ shippingText || defaultShippingText }
 			/>
 			<LocalPickupSelector

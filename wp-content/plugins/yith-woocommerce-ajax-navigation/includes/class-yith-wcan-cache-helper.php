@@ -2,7 +2,7 @@
 /**
  * Cache class
  *
- * @author  YITH
+ * @author  YITH <plugins@yithemes.com>
  * @package YITH\AjaxProductFilter\Classes
  * @version 4.1.2
  */
@@ -98,6 +98,9 @@ if ( ! class_exists( 'YITH_WCAN_Cache_Helper' ) ) {
 			if ( is_null( $index ) ) {
 				self::$transients[ $transient ]['value'] = $value;
 			} else {
+				if ( empty( self::$transients[ $transient ]['value'] ) ) {
+					self::$transients[ $transient ]['value'] = array();
+				}
 				self::$transients[ $transient ]['value'][ $index ] = $value;
 			}
 

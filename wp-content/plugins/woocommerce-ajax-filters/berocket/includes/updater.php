@@ -287,7 +287,8 @@ if ( ! class_exists( 'BeRocket_updater' ) ) {
         }
 
         public static function test_key() {
-            if ( ! ( current_user_can( 'manage_options' ) ) ) {
+            $wp_nonce = (empty($_GET['wp_nonce']) ? (empty($_POST['wp_nonce']) ? '' : $_POST['wp_nonce']) : $_GET['wp_nonce']);
+            if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $wp_nonce, 'br_test_key' ) ) {
                 echo __( 'Do not have access for this feature', 'BeRocket_domain' );
                 wp_die();
             }
@@ -418,7 +419,7 @@ if ( ! class_exists( 'BeRocket_updater' ) ) {
                     if( async_func !== false ) {
                         async = true;
                     }
-                    data = {action: 'br_test_key', key: key, id: product_id, fast:fast};
+                    data = {action: 'br_test_key', key: key, id: product_id, fast:fast, wp_nonce: "<?php echo wp_create_nonce('br_test_key'); ?>"};
                     is_submit = false;
                     jQuery.ajax({
                         url: ajaxurl,
@@ -590,7 +591,7 @@ if ( ! class_exists( 'BeRocket_updater' ) ) {
                                                     value="1"<?php if ( ! empty( $options[ 'debug_mode' ] ) )
                                     echo ' checked' ?>><?php _e('Enable debug mode', 'BeRocket_domain'); ?></label></td>
                     </tr>
-                    <tr<?php if(empty( $options[ 'account_key' ] )) { echo ' style="display:none;"';}?>>
+                    <tr<?php if(empty( $options[ 'account_key' ] )) { echo ' style="display:none!important;"';}?>>
                         <td><h3><?php _e('Account key', 'BeRocket_domain'); ?></h3></td>
                         <td><input type="text" id="berocket_account_key" name="BeRocket_account_option[account_key]"
                                    size="50"
@@ -635,14 +636,15 @@ if ( ! class_exists( 'BeRocket_updater' ) ) {
                         }
                         ?>
                     </select>
-                    <button type="button" class="button tiny-button berocket_get_plugin_for_error">Get errors</button>
+                    <button type="button" class="button tiny-button berocket_get_plugin_for_error"  data-nonce="<?php echo wp_create_nonce('berocket_error_notices_get'); ?>">Get errors</button>
                     <div class="berocket_html_plugin_for_error"></div>
                 </div>
             </div>
             <script>
                 jQuery('.berocket_get_plugin_for_error').click(function () {
                     var plugin_id = jQuery('.berocket_select_plugin_for_error').val();
-                    jQuery.post(ajaxurl, {action: 'berocket_error_notices_get', plugin_id: plugin_id}, function (data) {
+                    var nonce = jQuery(this).data("nonce");
+                    jQuery.post(ajaxurl, {action: 'berocket_error_notices_get', plugin_id: plugin_id, wp_nonce: nonce}, function (data) {
                         jQuery('.berocket_html_plugin_for_error').html(data);
                     });
                 });

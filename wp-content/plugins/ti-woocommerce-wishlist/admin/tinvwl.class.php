@@ -51,8 +51,9 @@ class TInvWL_Admin_TInvWL extends TInvWL_Admin_Base {
 	 * Create Wishlist and Product class.
 	 * Load settings classes.
 	 */
-	function load_function() {
-
+	function load_function(): void {
+		$this->wishlist = new TInvWL_Admin_Wishlist( $this->_name, $this->_version );
+//		$this->product  = new TInvWL_Admin_Product( $this->_name, $this->_version );
 		$this->load_settings();
 
 		$this->define_hooks();
@@ -93,10 +94,7 @@ class TInvWL_Admin_TInvWL extends TInvWL_Admin_Base {
 		} elseif ( ! tinv_get_option( 'page', 'wishlist' ) ) {
 			add_action( 'admin_notices', array( $this, 'empty_page_admin_notice' ) );
 		}
-		if ( ! tinv_get_option( 'chat', 'enabled' ) ) {
-			add_action( 'admin_notices', array( $this, 'enable_chat_admin_notice' ) );
-		}
-		add_action( 'wp_ajax_tinvwl_admin_chat_notice', array( $this, 'tinvwl_admin_chat_notice' ) );
+
 		add_action( 'woocommerce_system_status_report', array( $this, 'system_report_templates' ) );
 
 		add_action( 'switch_theme', array( $this, 'admin_notice_outdated_templates' ) );
@@ -106,7 +104,7 @@ class TInvWL_Admin_TInvWL extends TInvWL_Admin_Base {
 		add_filter( 'display_post_states', array( $this, 'add_display_post_states' ), 10, 2 );
 
 		add_action( 'tinvwl_admin_promo_footer', array( $this, 'promo_footer' ) );
-		add_action( 'tinvwl_remove_without_author_wishlist', array( $this, 'remove_old_wishlists' ) );
+
 		$this->scheduled_remove_wishlist();
 
 		add_action( 'enqueue_block_editor_assets', array( $this, 'woocommerce_blocks_editor' ), 10, 2 );
@@ -129,7 +127,7 @@ class TInvWL_Admin_TInvWL extends TInvWL_Admin_Base {
 	 * Error notice if wishlist page not set.
 	 */
 	function empty_page_admin_notice() {
-		printf( '<div class="notice notice-error is-dismissible" style="position: relative;"><h4>%1$s</h4><p>%2$s</p><ol><li>%3$s</li><li>%4$s</li><li>%5$s</li></ol><p><a href="%6$s">%7$s</a>%8$s<a href="%9$s">%10$s</a></p><button type="button" class="notice-dismiss"><span class="screen-reader-text">' . __( 'Dismiss', 'ti-woocommerce-wishlist' ) . '</span></button></div>', // @codingStandardsIgnoreLine WordPress.XSS.EscapeOutput.OutputNotEscaped
+		printf( '<div class="notice notice-error is-dismissible tinvwl-empty-page-notice" style="position: relative;"><h4>%1$s</h4><p>%2$s</p><ol><li>%3$s</li><li>%4$s</li><li>%5$s</li></ol><p><a href="%6$s">%7$s</a>%8$s<a href="%9$s">%10$s</a></p></div>', // @codingStandardsIgnoreLine WordPress.XSS.EscapeOutput.OutputNotEscaped
 			esc_html__( 'WooCommerce Wishlist Plugin is misconfigured!', 'ti-woocommerce-wishlist' ),
 			esc_html__( 'Since the Setup Wizard was skipped, the Wishlist may function improperly.', 'ti-woocommerce-wishlist' ),
 			esc_html__( 'Create a New Page or open to edit a page where the Wishlist should be displayed.', 'ti-woocommerce-wishlist' ),
@@ -144,38 +142,13 @@ class TInvWL_Admin_TInvWL extends TInvWL_Admin_Base {
 	}
 
 	/**
-	 * Notice to enable support chat.
-	 */
-	function enable_chat_admin_notice() {
-		if ( ! isset( $_GET['page'] ) || substr( $_GET['page'], 0, 6 ) !== 'tinvwl' ) {
-			return;
-		}
-
-		$hide_notice = get_option( 'tinvwl_hide_chat_notice' );
-
-		if ( $hide_notice ) {
-			return;
-		}
-
-		printf( '<div class="notice notice-warning  is-dismissible tinvwl-chat-notice"><p>%1$s</p><p><a href="%2$s" class="button-primary">%3$s</a></p></div>',
-			__( 'The Support Chat is disabled by default for the plugin setting pages. Enable it to get the most from our service!', 'ti-woocommerce-wishlist' ), // @codingStandardsIgnoreLine WordPress.XSS.EscapeOutput.OutputNotEscaped
-			esc_url( admin_url( 'admin.php?page=tinvwl#chat' ) ),
-			esc_html__( 'Enable Support Chat', 'ti-woocommerce-wishlist' )
-		);
-	}
-
-	function tinvwl_admin_chat_notice() {
-		update_option( 'tinvwl_hide_chat_notice', '1' );
-	}
-
-	/**
-	 * Creation mune and sub-menu
+	 * Creation menu and sub-menu
 	 */
 	function action_menu() {
 		global $wp_roles;
 		$page = add_menu_page( __( 'TI Wishlist', 'ti-woocommerce-wishlist' ), __( 'TI Wishlist', 'ti-woocommerce-wishlist' ), 'tinvwl_general_settings', $this->_name, null, TINVWL_URL . 'assets/img/icon_menu.png', '55.888' );
 		add_action( "load-$page", array( $this, 'onload' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'add_inline_scripts' ) );
+		wp_add_inline_style( 'admin-menu', '#adminmenu #toplevel_page_tinvwl a[href="admin.php?page=tinvwl-upgrade"] {font-weight: 600;background-color: #df4d57;color: #fff;margin: 3px 10px 0;display: block;text-align: center;border-radius: 3px;transition: all .3s }#adminmenu #toplevel_page_tinvwl a[href="admin.php?page=tinvwl-upgrade"]:focus,#adminmenu #toplevel_page_tinvwl a[href="admin.php?page=tinvwl-upgrade"]:hover {background-color: #f48460;box-shadow: none }' );
 		$menu = apply_filters( 'tinvwl_admin_menu', array() );
 		foreach ( $menu as $item ) {
 			if ( ! array_key_exists( 'page_title', $item ) ) {
@@ -239,13 +212,6 @@ class TInvWL_Admin_TInvWL extends TInvWL_Admin_Base {
 	/**
 	 * Load javascript
 	 */
-	function add_inline_scripts() {
-		wp_add_inline_script( 'jquery-blockui', 'jQuery(function(c){c("body").on("click.woo",\'a[href*="//woocommerce.com"]\',function(o){var e=(((o||{}).originalEvent||{}).target||{}).href||!1,r=((o||{}).currentTarget||{}).href||!1,t="&";e&&r&&(o.currentTarget.href=e.split("?")[0]+"?aff=3955",setTimeout(function(){o.originalEvent.target.href=e},1)),c("body").off("click.woo",\'a[href*="woocommerce.com"]\')})});' );
-	}
-
-	/**
-	 * Load javascript
-	 */
 	function enqueue_scripts() {
 		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 		wp_enqueue_script( $this->_name . '-bootstrap', TINVWL_URL . 'assets/js/bootstrap' . $suffix . '.js', array( 'jquery' ), $this->_version, 'all' );
@@ -259,24 +225,48 @@ class TInvWL_Admin_TInvWL extends TInvWL_Admin_Base {
 		) );
 		wp_enqueue_script( $this->_name );
 
-		if ( tinv_get_option( 'chat', 'enabled' ) ) {
+		$geo              = new WC_Geolocation(); // Get WC_Geolocation instance object
+		$user_ip          = $geo->get_ip_address(); // Get user IP
+		$user_geo         = $geo->geolocate_ip( $user_ip ); // Get geolocated user data.
+		$country_code     = $user_geo['country']; // Get the country code
+		$restricted_codes = array( 'BD', 'PK', 'IN', 'NG', 'KE' );
 
-			$geo              = new WC_Geolocation(); // Get WC_Geolocation instance object
-			$user_ip          = $geo->get_ip_address(); // Get user IP
-			$user_geo         = $geo->geolocate_ip( $user_ip ); // Get geolocated user data.
-			$country_code     = $user_geo['country']; // Get the country code
-			$restricted_codes = array( 'BD', 'PK', 'IN', 'NG', 'KE' );
+		$chat_option = ( isset( $_POST['chat_nonce'] ) ) ? ( isset( $_POST['chat-enabled'] ) ? true : false ) : tinv_get_option( 'chat', 'enabled' );
 
-			if ( ! in_array( $country_code, $restricted_codes ) ) {
+		$disable_chat = ! $chat_option || in_array( $country_code, $restricted_codes );
 
-				$user_id       = get_current_user_id();
-				$user_info     = get_userdata( $user_id );
-				$current_theme = wp_get_theme();
+		if ( ! $disable_chat ) {
 
-				$parent_theme = $current_theme->parent();
+			global $wpdb;
 
-				wp_add_inline_script( $this->_name, 'window.intercomSettings = {
+			$user_id       = get_current_user_id();
+			$user_info     = get_userdata( $user_id );
+			$current_theme = wp_get_theme();
+			$parent_theme  = $current_theme->parent();
+
+			$lists_table = sprintf( '%s%s_%s', $wpdb->prefix, TINVWL_PREFIX, 'lists' );
+
+			$total_wishlists = $wpdb->get_var( "SELECT COUNT(*) FROM `{$lists_table}`" );
+
+			$first_wishlist_date = $wpdb->get_var( "SELECT `date` FROM `{$lists_table}` ORDER BY `ID` ASC" );
+
+			$timestamp = $first_wishlist_date ? strtotime( $first_wishlist_date ) : time();
+
+			$date1 = new DateTime(); // current date
+			$date2 = ( new DateTime() )->setTimestamp( $timestamp ); // your timestamp
+
+			$interval = $date1->diff( $date2 );
+
+			$days_used = $interval->days;
+
+			// If the difference is 0 days, show as 1 day
+			if ( $days_used === 0 ) {
+				$days_used = 1;
+			}
+
+			wp_add_inline_script( $this->_name, 'window.intercomSettings = {
 					app_id: "zyh6v0pc",
+					hide_default_launcher: ' . ( ( $disable_chat ) ? 'true' : 'false' ) . ',
 					"Website": "' . get_site_url() . '",
 					"Plugin name": "WooCommerce Wishlist Plugin",
 					"Plugin version":"' . TINVWL_FVERSION . '",
@@ -305,13 +295,16 @@ class TInvWL_Admin_TInvWL extends TInvWL_Admin_Base {
 						plugin_version:"' . TINVWL_FVERSION . '",
 						partner:"' . TINVWL_UTM_SOURCE . '"
 					});
+					Intercom("trackEvent", "lists-data", {
+						wishlists:' . $total_wishlists . ',
+						days_used:' . $days_used . '
+					});
 			' );
-			}
 		}
 	}
 
 	/**
-	 * Add plugin footer copywriting
+	 * Add plugin footer copyrighting
 	 */
 	function footer_admin() {
 		do_action( 'tinvwl_admin_promo_footer' );
@@ -435,7 +428,7 @@ class TInvWL_Admin_TInvWL extends TInvWL_Admin_Base {
 	/**
 	 * Removing old wishlist without a user older than 34 days
 	 */
-	public function remove_old_wishlists() {
+	public static function remove_old_wishlists() {
 		global $wpdb;
 		$wishlists = $wpdb->get_results( 'SELECT t1.wishlist_id ID FROM ' . $wpdb->prefix . 'tinvwl_items t1 JOIN( SELECT wishlist_id, MAX(DATE) DATE FROM ' . $wpdb->prefix . 'tinvwl_items GROUP BY wishlist_id ) t2 ON t1.wishlist_id = t2.wishlist_id AND t1.date = t2.date WHERE t1.author = 0 AND t1.date < DATE_SUB(CURDATE(), INTERVAL ' . (int) tinv_get_option( 'general', 'guests_timeout' ) . ' DAY)', ARRAY_A );
 

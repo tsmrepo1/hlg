@@ -16,7 +16,7 @@ class Personalization {
 			add_action( 'admin_enqueue_scripts', function () {
 				// Register personalization styles used in block editor.
 				wp_register_style( 'dgwt-wcas-style-personalization', false, array(), true, true );
-				wp_add_inline_style( 'dgwt-wcas-style-personalization', $this->getStyle() );
+				wp_add_inline_style( 'dgwt-wcas-style-personalization', $this->getStyles() );
 			} );
 		}
 	}
@@ -28,7 +28,7 @@ class Personalization {
 	 */
 	public function printStyle() { ?>
 		<style>
-			<?php echo Helpers::minifyCSS( $this->getStyle() ); ?>
+			<?php echo $this->getStyles(); ?>
 		</style>
 		<?php
 	}
@@ -36,16 +36,19 @@ class Personalization {
 	/**
 	 * Get personalized CSS (without <style></style>)
 	 *
+	 * @param bool $minified Whether styles should be minified.
+	 *
 	 * @return string
 	 */
-	public function getStyle() {
+	public function getStyles( $minified = true ) {
 		// Search form
-		$show_submit        = DGWT_WCAS()->settings->getOption( 'show_submit_button' );
-		$bg_search_input    = DGWT_WCAS()->settings->getOption( 'bg_input_color' );
-		$text_input_color   = DGWT_WCAS()->settings->getOption( 'text_input_color' );
-		$border_input_color = DGWT_WCAS()->settings->getOption( 'border_input_color' );
-		$bg_submit_color    = DGWT_WCAS()->settings->getOption( 'bg_submit_color' );
-		$text_submit_color  = DGWT_WCAS()->settings->getOption( 'text_submit_color' );
+		$show_submit             = DGWT_WCAS()->settings->getOption( 'show_submit_button' );
+		$bg_input_underlay_color = DGWT_WCAS()->settings->getOption( 'bg_input_underlay_color' ); // Pirx
+		$bg_search_input         = DGWT_WCAS()->settings->getOption( 'bg_input_color' );
+		$text_input_color        = DGWT_WCAS()->settings->getOption( 'text_input_color' );
+		$border_input_color      = DGWT_WCAS()->settings->getOption( 'border_input_color' );
+		$bg_submit_color         = DGWT_WCAS()->settings->getOption( 'bg_submit_color' );
+		$text_submit_color       = DGWT_WCAS()->settings->getOption( 'text_submit_color' );
 
 		// Suggestions
 		$sug_hover_color     = DGWT_WCAS()->settings->getOption( 'sug_hover_color' );
@@ -71,6 +74,10 @@ class Personalization {
 		<?php if(!empty($max_form_width)): ?> max-width: <?php echo $max_form_width; ?>px;
 		<?php endif; ?>
 		}
+
+		<?php if ( ! empty( $bg_input_underlay_color ) ): ?>
+			.dgwt-wcas-style-pirx .dgwt-wcas-sf-wrapp {background-color: <?php echo sanitize_text_field( $bg_input_underlay_color ) ?>;}
+		<?php endif; ?>
 
 		<?php if ( !empty( $bg_search_input ) || !empty( $text_input_color ) || !empty( $border_input_color ) ): ?>
 		.dgwt-wcas-search-wrapp .dgwt-wcas-sf-wrapp input[type="search"].dgwt-wcas-search-input,
@@ -206,6 +213,10 @@ class Personalization {
 			echo '.dgwt-wcas-search-icon path { fill: ' . sanitize_text_field( $search_icon_color ) . ';}';
 		}
 
-		return ob_get_clean();
+		if ( $minified ) {
+			return Helpers::minifyCSS( ob_get_clean() );
+		} else {
+			return ob_get_clean();
+		}
 	}
 }

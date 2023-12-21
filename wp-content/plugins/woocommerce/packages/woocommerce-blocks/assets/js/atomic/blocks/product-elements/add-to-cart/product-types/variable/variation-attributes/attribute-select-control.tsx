@@ -5,9 +5,9 @@ import { __ } from '@wordpress/i18n';
 import { decodeEntities } from '@wordpress/html-entities';
 import { SelectControl } from 'wordpress-components';
 import type { SelectControl as SelectControlType } from '@wordpress/components';
-import { useEffect } from 'react';
+import { useEffect } from '@wordpress/element';
 import classnames from 'classnames';
-import { ValidationInputError } from '@woocommerce/blocks-checkout';
+import { ValidationInputError } from '@woocommerce/blocks-components';
 import { VALIDATION_STORE_KEY } from '@woocommerce/block-data';
 import { useDispatch, useSelect } from '@wordpress/data';
 

@@ -33,6 +33,22 @@
                 escapeRegExChars: function (value) {
                     return value.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
                 },
+                formatHtml: function (string) {
+                    return string.replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&apos;')
+                        .replace(/&lt;sup/g, '<sup')
+                        .replace(/&lt;\/sup/g, '</sup')
+                        .replace(/sup&gt;/g, 'sup>')
+                        .replace(/&lt;sub/g, '<sub')
+                        .replace(/&lt;\/sub/g, '</sub')
+                        .replace(/sub&gt;/g, 'sub>')
+                        .replace(/&lt;br\s?\/?&gt;/g, '<br/>')
+                        .replace(/&lt;(\/?(strong|b|br|span))&gt;/g, '<$1>')
+                        .replace(/&lt;(strong|span)\s+class\s*=\s*&quot;([^&]+)&quot;&gt;/g, '<$1 class="$2">');
+                },
                 createNode: function (containerClass) {
                     var div = document.createElement('div');
                     div.className = containerClass;
@@ -42,49 +58,41 @@
                     return div;
                 },
                 highlight: function (suggestionValue, phrase) {
+                    var i,
+                        tokens = phrase.split(/ /),
+                        highlighted = false,
+                        last = '';
 
-                    if (dgwt_wcas.is_premium) {
-                        var i,
-                            tokens = phrase.split(/ /),
-                            highlighted = false,
-                            last = '';
+                    if (tokens) {
+                        last = tokens[tokens.length - 1];
+                        tokens = tokens.sort(function (a, b) {
+                            return b.length - a.length;
+                        });
 
-                        if (tokens) {
-                            last = tokens[tokens.length - 1];
-                            tokens = tokens.sort(function (a, b) {
-                                return b.length - a.length;
-                            });
+                        for (i = 0; i < tokens.length; i++) {
+                            if (tokens[i] && tokens[i].length >= 1) {
 
-                            for (i = 0; i < tokens.length; i++) {
-                                if (tokens[i] && tokens[i].length >= 1) {
+                                var token = tokens[i].replace(/[\^\@]/g, '');
 
-                                    var token = tokens[i].replace(/[\^\@]/g, '');
-
-                                    if (token.length > 0) {
-                                        if (token.trim().length === 1 && tokens[i] !== last) {
-                                            var pattern = '((\\s|^)' + utils.escapeRegExChars(token.trim()) + '\\s)';
-                                        } else if (token.trim().length === 1 && tokens[i] === last) {
-                                            var pattern = '((\\s|^)' + utils.escapeRegExChars(token.trim()) + ')';
-                                        } else {
-                                            var pattern = '(' + utils.escapeRegExChars(token.trim()) + ')';
-                                        }
-
-                                        suggestionValue = suggestionValue.replace(new RegExp(pattern, 'gi'), '\^\^$1\@\@');
-                                        highlighted = true;
+                                if (token.length > 0) {
+                                    if (token.trim().length === 1 && tokens[i] !== last) {
+                                        var pattern = '((\\s|^)' + utils.escapeRegExChars(token.trim()) + '\\s)';
+                                    } else if (token.trim().length === 1 && tokens[i] === last) {
+                                        var pattern = '((\\s|^)' + utils.escapeRegExChars(token.trim()) + ')';
+                                    } else {
+                                        var pattern = '(' + utils.escapeRegExChars(token.trim()) + ')';
                                     }
+
+                                    suggestionValue = suggestionValue.replace(new RegExp(pattern, 'gi'), '\^\^$1\@\@');
+                                    highlighted = true;
                                 }
                             }
                         }
+                    }
 
-                        if (highlighted) {
-                            suggestionValue = suggestionValue.replace(/\^\^/g, '<strong>');
-                            suggestionValue = suggestionValue.replace(/@@/g, '<\/strong>');
-                        }
-
-
-                    } else {
-                        var pattern = '(' + utils.escapeRegExChars(phrase) + ')';
-                        suggestionValue = suggestionValue.replace(new RegExp(pattern, 'gi'), '<strong>$1<\/strong>');
+                    if (highlighted) {
+                        suggestionValue = suggestionValue.replace(/\^\^/g, '<strong>');
+                        suggestionValue = suggestionValue.replace(/@@/g, '<\/strong>');
                     }
 
                     return suggestionValue;
@@ -166,6 +174,9 @@
                 isBrowser: function (browser) {
                     return navigator.userAgent.indexOf(browser) !== -1;
                 },
+                isSafari: function () {
+                    return this.isBrowser('Safari') && !this.isBrowser('Chrome');
+                },
                 isIOS: function () {
                     return [
                             'iPad Simulator',
@@ -181,7 +192,7 @@
                 isIE11: function () {
                     return !!navigator.userAgent.match(/Trident\/7\./);
                 },
-                setLocalStorageItem(key, value) {
+                setLocalStorageItem: function (key, value) {
                     try {
                         window.localStorage.setItem(
                             key,
@@ -191,7 +202,7 @@
                         // A more advanced implementation would handle the error case
                     }
                 },
-                getLocalStorageItem(key, defaultValue) {
+                getLocalStorageItem: function (key, defaultValue) {
                     try {
                         const item = window.localStorage.getItem(key);
                         return item ? JSON.parse(item) : defaultValue;
@@ -199,7 +210,7 @@
                         return defaultValue;
                     }
                 },
-                removeLocalStorageItem(key) {
+                removeLocalStorageItem: function (key) {
                     try {
                         window.localStorage.removeItem(key);
                     } catch (error) {
@@ -362,34 +373,12 @@
         return typeof response === 'string' ? JSON.parse(response) : response;
     }
 
-    function _formatResult(suggestionValue, currentValue, highlight, options) {
-        // Do not replace anything if there current value is empty
-        if (!currentValue) {
-            return suggestionValue;
-        }
-
-        if (highlight) {
+    function _formatResult(suggestionValue, currentValue, highlight) {
+        if (currentValue.length > 0 && highlight) {
             suggestionValue = utils.highlight(suggestionValue, currentValue);
         }
 
-        if (!options.convertHtml) {
-            return suggestionValue;
-        }
-
-        return suggestionValue.replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&apos;')
-            .replace(/&lt;sup/g, '<sup')
-            .replace(/&lt;\/sup/g, '</sup')
-            .replace(/sup&gt;/g, 'sup>')
-            .replace(/&lt;sub/g, '<sub')
-            .replace(/&lt;\/sub/g, '</sub')
-            .replace(/sub&gt;/g, 'sub>')
-            .replace(/&lt;br\s?\/?&gt;/g, '<br/>')
-            .replace(/&lt;(\/?(strong|b|br|span))&gt;/g, '<$1>')
-            .replace(/&lt;(strong|span)\s+class\s*=\s*&quot;([^&]+)&quot;&gt;/g, '<$1 class="$2">');
+        return utils.formatHtml(suggestionValue);
     }
 
     DgwtWcasAutocompleteSearch.prototype = {
@@ -741,7 +730,7 @@
                             $input[0].setSelectionRange(textEnd, textEnd);
                         }
 
-                        $input.focus();
+                        $input.trigger('focus');
                     });
 
                     setTimeout(function () {
@@ -763,6 +752,7 @@
                         if (!($target.closest('.' + that.options.searchFormClass).length > 0
                             || $target.closest('.' + that.options.containerClass).length > 0
                             || $target.closest('.' + that.options.containerDetailsClass).length > 0
+                            || $target.hasClass('js-dgwt-wcas-sugg-hist-clear')
                         )) {
                             that.hideIconModeSearch();
                         }
@@ -922,7 +912,7 @@
                 $wrapper.removeClass('dgwt-wcas-has-submit');
             }
 
-            $wrapper.find('.' + that.options.searchInputClass).focus();
+            $wrapper.find('.' + that.options.searchInputClass).trigger('focus');
 
             $(document).on('click.autocomplete', '.js-dgwt-wcas-om-return', function (e) {
                 that.closeOverlayMobile($overlayWrap);
@@ -1041,14 +1031,18 @@
             var that = this,
                 options = that.options,
                 value = that.el.val(),
-                query = that.getQuery(value);
+                query = that.getQuery(value),
+                isMobileOverlayOnIPhone = false;
 
             // Remove focused classes
             $('body').removeClass('dgwt-wcas-focused');
             $('.' + options.searchFormClass).removeClass('dgwt-wcas-search-focused');
 
-            if (!that.isMouseDownOnSearchElements) {
+            if (utils.isIOS() && $('html').hasClass('dgwt-wcas-overlay-mobile-on')) {
+                isMobileOverlayOnIPhone = true;
+            }
 
+            if (!(that.isMouseDownOnSearchElements || isMobileOverlayOnIPhone)) {
                 that.hide();
 
                 if (that.selection && that.currentValue !== query) {
@@ -1127,7 +1121,7 @@
             $wrapp.removeClass(that.classes.inputFilled);
 
             if (focus) {
-                $el.focus();
+                $el.trigger('focus');
             }
         },
         fixPositionSuggestions: function () {
@@ -1220,15 +1214,16 @@
         fixHeight: function () {
             var that = this;
 
-            if (!that.canShowDetailsPanel()) {
-                return false;
-            }
-
             var $suggestionsWrapp = that.getSuggestionsContainer(),
                 $detailsWrapp = that.getDetailsContainer();
 
             $suggestionsWrapp.css('height', 'auto');
             $detailsWrapp.css('height', 'auto');
+
+            if (!that.canShowDetailsPanel()) {
+                $suggestionsWrapp.css('height', 'auto');
+                return false;
+            }
 
             var sH = $suggestionsWrapp.outerHeight(false),
                 dH = $detailsWrapp.outerHeight(false),
@@ -1488,13 +1483,18 @@
 
             if (query.length < options.minChars) {
 
+                that.hideCloseButton();
+                that.hide();
+
                 if (that.canShowPreSuggestions() && query.length === 0) {
                     that.showPreSuggestions();
-                } else {
-                    that.hideCloseButton();
-                    that.hide();
                 }
             } else {
+
+                if (that.canShowPreSuggestions()) {
+                    that.hidePreSuggestions()
+                }
+
                 that.getSuggestions(query);
             }
         },
@@ -1504,13 +1504,24 @@
             return (suggestions.length === 1 && suggestions[0].value.toLowerCase() === query.toLowerCase());
         },
         isNoResults: function (suggestions) {
-            return suggestions.length === 1 && typeof suggestions[0].type !== 'undefined' && suggestions[0].type === 'no-results';
+            var isNoResults = false;
+
+            if (
+                typeof suggestions != 'undefined'
+                && suggestions.length === 1
+                && typeof suggestions[0].type !== 'undefined'
+                && suggestions[0].type === 'no-results'
+            ) {
+                isNoResults = true;
+            }
+
+            return isNoResults;
         },
         canShowDetailsPanel: function () {
             var that = this,
                 show = that.options.showDetailsPanel;
 
-            if ($(window).width() < 768 || ('ontouchend' in document) || that.isPreSuggestionsMode) {
+            if ($(window).width() < 768 || ('ontouchend' in document) || that.isPreSuggestionsMode || that.isNoResults(that.suggestions)) {
                 show = false;
             }
             return show;
@@ -1592,7 +1603,7 @@
 
             params = options.ignoreParams ? null : options.params;
 
-            if ($.isFunction(options.lookup)) {
+            if (typeof options.lookup === 'function') {
                 options.lookup(q, function (data) {
                     that.suggestions = data.suggestions;
                     that.suggest();
@@ -1611,7 +1622,7 @@
             if (that.isLocal) {
                 response = that.getSuggestionsLocal(q);
             } else {
-                if ($.isFunction(serviceUrl)) {
+                if (typeof serviceUrl === 'function') {
                     serviceUrl = serviceUrl.call(that.element, q);
                 }
                 cacheKey = serviceUrl + '?' + $.param(params || {});
@@ -2084,7 +2095,7 @@
                 $suggestions = that.getSuggestionsContainer(),
                 $detailsPanel = that.getDetailsContainer();
 
-            if ($.isFunction(that.options.onHide) && that.visible) {
+            if (typeof that.options.onHide === 'function' && that.visible) {
                 that.options.onHide.call(that.element, container);
             }
 
@@ -2168,7 +2179,7 @@
             var that = this;
             if (!('ontouchend' in document)) {
 
-                $(document).mouseup(function (e) {
+                $(document).on('mouseup', function (e) {
                     if (!that.visible) {
                         return;
                     }
@@ -2251,7 +2262,8 @@
                         append = '',
                         title = '',
                         highlight = true,
-                        isImg;
+                        isImg,
+                        noResults = false;
 
                     if (suggestion.taxonomy === 'product_cat') {
                         classes += ' dgwt-wcas-suggestion-tax dgwt-wcas-suggestion-cat';
@@ -2305,53 +2317,62 @@
                             suggestion.value = dgwt_wcas.labels[suggestion.value + '_plu'];
                         }
                         highlight = false;
-                    } else {
-                        classes += ' dgwt-wcas-suggestion-nores';
-                        suggestion.value = dgwt_wcas.labels.no_results;
-                        highlight = false;
-                        if (that.canShowDetailsPanel()) {
-                            that.detailsPanelClearScene();
-                        }
+                    }
+
+                    if (suggestion.type === 'no-results') {
+
                         $('body').addClass('dgwt-wcas-nores');
-                    }
-
-                    // Image
-                    if (typeof suggestion.image_src != 'undefined' && suggestion.image_src) {
-                        isImg = true;
-                    }
-
-                    title = title.length > 0 ? ' title="' + title + '"' : '';
-
-                    html += '<a href="' + url + '" class="' + classes + '" data-index="' + i + '">';
-
-                    if (isImg) {
-                        html += '<span class="dgwt-wcas-si"><img src="' + suggestion.image_src + '" /></span>';
-                        html += '<div class="dgwt-wcas-content-wrapp">';
-                    }
-
-                    html += '<span' + title + ' class="' + innerClass + '">';
-
-                    if (suggestion.type === 'vendor') {
-                        html += '<span class="dgwt-wcas-st-title">' + prepend + formatResult(suggestion.value, value, highlight, options) + append + '</span>';
-
-                        // Vendor city
-                        if (suggestion.shop_city) {
-                            html += '<span class="dgwt-wcas-vendor-city"><span> - </span>' + formatResult(suggestion.shop_city, value, true, options) + '</span>';
+                        if (containerDetails.length) {
+                            that.detailsPanelClearScene();
+                            containerDetails.hide();
+                            containerDetails.removeClass(that.classes.fixed);
+                            that.fixHeight();
                         }
 
-                        // Description
-                        if (typeof suggestion.desc != 'undefined' && suggestion.desc) {
-                            html += '<span class="dgwt-wcas-sd">' + formatResult(suggestion.desc, value, true, options) + '</span>';
-                        }
+                        suggestion.value = '';
+                        html += that.createNoResultsContent();
 
                     } else {
-                        html += prepend + formatResult(suggestion.value, value, highlight, options) + append;
+
+                        // Image
+                        if (typeof suggestion.image_src != 'undefined' && suggestion.image_src) {
+                            isImg = true;
+                        }
+
+                        title = title.length > 0 ? ' title="' + title + '"' : '';
+
+                        html += '<a href="' + url + '" class="' + classes + '" data-index="' + i + '">';
+
+                        if (isImg) {
+                            html += '<span class="dgwt-wcas-si"><img src="' + suggestion.image_src + '" /></span>';
+                            html += '<div class="dgwt-wcas-content-wrapp">';
+                        }
+
+                        html += '<span' + title + ' class="' + innerClass + '">';
+
+                        if (suggestion.type === 'vendor') {
+                            html += '<span class="dgwt-wcas-st-title">' + prepend + formatResult(suggestion.value, value, highlight, options) + append + '</span>';
+
+                            // Vendor city
+                            if (suggestion.shop_city) {
+                                html += '<span class="dgwt-wcas-vendor-city"><span> - </span>' + formatResult(suggestion.shop_city, value, true, options) + '</span>';
+                            }
+
+                            // Description
+                            if (typeof suggestion.desc != 'undefined' && suggestion.desc) {
+                                html += '<span class="dgwt-wcas-sd">' + formatResult(suggestion.desc, value, true, options) + '</span>';
+                            }
+
+                        } else {
+                            html += prepend + formatResult(suggestion.value, value, highlight, options) + append;
+                        }
+
+                        html += '</span>';
+
+                        html += isImg ? '</div>' : '';
+                        html += '</a>';
                     }
 
-                    html += '</span>';
-
-                    html += isImg ? '</div>' : '';
-                    html += '</a>';
                 } else {
 
                     html += that.createProductSuggestion(suggestion, i);
@@ -2364,7 +2385,7 @@
             noSuggestionsContainer.detach();
             container.html(html);
 
-            if ($.isFunction(beforeRender)) {
+            if (typeof beforeRender === 'function') {
                 beforeRender.call(that.element, container, that.suggestions);
             }
 
@@ -2394,6 +2415,28 @@
 
             that.visible = true;
             that.fixPosition();
+        },
+        createNoResultsContent: function () {
+            var html = '<div class="dgwt-wcas-suggestion-nores">',
+                defaultHtml = typeof dgwt_wcas.labels.no_results_default != 'undefined' ? dgwt_wcas.labels.no_results_default : '',
+                noResultsHtml = defaultHtml;
+
+            try {
+                noResultsHtml = JSON.parse(dgwt_wcas.labels.no_results);
+                // Fix invalid HTML
+                var tmpEl = document.createElement('div');
+                tmpEl.innerHTML = noResultsHtml;
+                noResultsHtml = tmpEl.innerHTML;
+
+            } catch (e) {
+
+            }
+
+            html += noResultsHtml;
+            html += '</div>';
+
+            return html;
+
         },
         createProductSuggestion: function (suggestion, index, extClassName) {
             var that = this,
@@ -2859,7 +2902,7 @@
                 that.selection = suggestion;
             }
 
-            if ($.isFunction(onSelectCallback)) {
+            if (typeof onSelectCallback === 'function') {
                 onSelectCallback.call(that.element, suggestion);
             }
         },
@@ -2867,7 +2910,7 @@
             var that = this,
                 suggestion = that.suggestions[index];
             if (suggestion.url.length > 0) {
-                window.open(suggestion.url, '_blank').focus();
+                window.open(suggestion.url, '_blank').trigger('focus');
             }
         },
         getValue: function (value) {
@@ -3187,7 +3230,7 @@
                     html += '<a href="' + suggestion.url + '" class="' + that.classes.suggestion + ' dgwt-wcas-suggestion-history-search" data-index="' + suggestionsIndex + '">';
                     html += '<span class="dgwt-wcas-si">' + suggestion.thumb_html + '</span>';
                     html += '<div class="dgwt-wcas-content-wrapp">';
-                    html += '<div class="dgwt-wcas-st"><span class="dgwt-wcas-st-title">' + suggestion.value + '</span></div>'
+                    html += '<div class="dgwt-wcas-st"><span class="dgwt-wcas-st-title">' + utils.formatHtml(suggestion.value) + '</span></div>'
                     html += '</div>';
                     html += '</a>';
 
@@ -3232,7 +3275,7 @@
             $suggestionsWrapp.html('');
             $('body').removeClass('dgwt-wcas-open-pre-suggestions');
 
-            activeInstance.el.focus();
+            activeInstance.el.trigger('focus');
         },
         hidePreSuggestions: function () {
             var that = this;
@@ -3362,6 +3405,10 @@
                 // Chrome speech recognition on iPhone and iPad is not working well.
                 return false;
             }
+            if (utils.isSafari()) {
+                // We don't support voice search on Safari because it's hard to debug.
+                return false;
+            }
 
             that.voiceSearchSetState('inactive', $voiceSearch);
             $formWrapper.addClass(that.options.voiceSearchSupportedClass);
@@ -3377,8 +3424,8 @@
                     $formWrapper.hasClass('dgwt-wcas-mobile-overlay-trigger-active') &&
                     !$('html').hasClass('dgwt-wcas-overlay-mobile-on')
                 ) {
-                    $formWrapper.find('.js-dgwt-wcas-enable-mobile-form').click();
-                    $formWrapper.find('.' + that.options.searchInputClass).blur();
+                    $formWrapper.find('.js-dgwt-wcas-enable-mobile-form').trigger('click');
+                    $formWrapper.find('.' + that.options.searchInputClass).trigger('blur');
                 }
                 if (that.voiceSearchStarted) {
                     that.voiceSearchAbort();
@@ -3401,7 +3448,7 @@
                 if (result.isFinal) {
                     $input.trigger('change');
                     if (!('ontouchend' in document)) {
-                        $input.focus();
+                        $input.trigger('focus');
                     }
                     that.voiceSearchSetState('inactive', $voiceSearch);
                 }
@@ -3715,7 +3762,6 @@
                 mobileOverlayDelay: dgwt_wcas.mobile_overlay_delay,
                 debounceWaitMs: dgwt_wcas.debounce_wait_ms,
                 sendGAEvents: dgwt_wcas.send_ga_events,
-                convertHtml: dgwt_wcas.convert_html,
                 enableGASiteSearchModule: dgwt_wcas.enable_ga_site_search_module,
                 appendTo: typeof dgwt_wcas.suggestions_wrapper != 'undefined' ? dgwt_wcas.suggestions_wrapper : 'body',
                 showProductVendor: typeof dgwt_wcas.show_product_vendor != 'undefined' && dgwt_wcas.show_product_vendor ? true : false,

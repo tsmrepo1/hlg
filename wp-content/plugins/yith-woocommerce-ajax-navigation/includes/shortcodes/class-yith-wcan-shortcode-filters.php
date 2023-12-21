@@ -4,7 +4,7 @@
  *
  * Defines shortcode that output Filters Preset
  *
- * @author  YITH
+ * @author  YITH <plugins@yithemes.com>
  * @package YITH\AjaxProductFilter\Classes\Shortcodes
  * @version 4.0
  */
@@ -69,6 +69,7 @@ if ( ! class_exists( 'YITH_WCAN_Shortcode_Filters' ) ) {
 					'title'          => _x( 'YITH AJAX Filters Preset', '[GUTENBERG]: block name', 'yith-woocommerce-ajax-navigation' ),
 					'description'    => _x( 'Show filters from a preset', '[GUTENBERG]: block description', 'yith-woocommerce-ajax-navigation' ),
 					'shortcode_name' => 'yith_wcan_filters',
+					'empty_message'  => _x( 'Please, choose the preset to render', '[GUTENBERG]: block empty message', 'yith-woocommerce-ajax-navigation' ),
 					'attributes'     => array(
 						'slug' => array(
 							'type'    => 'select',

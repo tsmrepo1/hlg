@@ -2,9 +2,9 @@
 
 Contributors: yithemes
 Tags: woocommerce ajax product filter download, woocommerce, widget, ajax, ajax filtered nav, ajax navigation, ajax filtered navigation, woocommerce layered navigation, woocommerce layered nav, product filter, product filters, ajax product filter, woocommerce ajax product filter, woocommerce filters, sidebar filter, sidebar ajax filter, ajax price filter, price filter, product sorting, woocommerce filter, taxonomy filter, attribute filter, attributes filter, woocommerce product sort, ajax sort, woocommerce ajax product filter, advanced product filters, ajax product filters, filters, woocommerce ajax product filters, woocommerce product filters, woocommerce product filters, category filter, attribute filters, woocommerce products filter, woocommerce price filter, yit, yith, yithemes
-Requires at least: 5.9
-Tested up to: 6.1
-Stable tag: 4.19.0
+Requires at least: 6.2
+Tested up to: 6.4
+Stable tag: 4.28.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -151,6 +151,79 @@ If none of the previous listed actions helps you solve the problem, then, submit
 14. Gutenberg block
 
 == Changelog ==
+
+= 4.28.0 - Released on 20 November 2023 =
+
+* New: support for WooCommerce 8.3
+* New: support for WordPress 6.4
+* Update: YITH plugin framework
+* Fix: term put outside hierarchical structure if empty
+
+= 4.27.0 - Released on 09 October 2023 =
+
+* New: support for WooCommerce 8.2
+* Update: YITH plugin framework
+* Dev: change isset to empty for prevent fatal error if a parameter is empty
+
+= 4.26.0 - Released on 13 September 2023 =
+
+* New: support for WooCommerce 8.1
+* Update: YITH plugin framework
+
+= 4.25.3 - Released on 01 September 2023 =
+
+* Fix: fatal error "Uncaught TypeError: array_intersect(): Argument #1 ($array) must be of type array, string given"
+
+= 4.25.2 - Released on 29 August 2023 =
+
+* Update: YITH plugin framework
+* Fix: additional fix to previous one about deprecated "Automatic conversion of false to array"
+
+= 4.25.1 - Released on 17 August 2023 =
+
+* Update: YITH plugin framework
+* Fix: fixed deprecated "Automatic conversion of false to array" in PHP 8.1
+
+= 4.25.0 - Released on 17 August 2023 =
+
+* New: support for WooCommerce 8.0
+* New: support for WordPress 6.3
+* Update: YITH plugin framework
+
+= 4.24.1 - Released on 18 July 2023 =
+
+* Update: YITH plugin framework
+* Fix: wrong percentage calculation on filter-item width
+
+= 4.24.0 - Released on 13 July 2023 =
+
+* New: support for WooCommerce 7.9
+* Update: YITH plugin framework
+
+= 4.23.0 - Released on 15 June 2023 =
+
+* New: support for WooCommerce 7.8
+* Update: YITH plugin framework
+* Fix: style issue with Image selector on admin panel
+* Dev: declared HPOS compatibility
+
+= 4.22.0 - Released on 16 May 2023 =
+
+* New: support for WooCommerce 7.7
+* Update: YITH plugin framework
+
+= 4.21.0 - Released on 17 April 2023 =
+
+* New: support for WooCommerce 7.6
+* Tweak: changed trigger used to re-init wishlist elements after filtering
+* Update: YITH plugin framework
+* Fix: label not shown if text is "0"
+
+= 4.20.0 - Released on 13 March 2023 =
+
+* New: support for WodPress 6.2
+* New: support for WooCommerce 7.5
+* Update: YITH plugin framework
 
 = 4.19.0 - Released on 08 February 2023 =
 

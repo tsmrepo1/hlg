@@ -8,18 +8,14 @@ import {
 	noticeContexts,
 } from '@woocommerce/base-context';
 import { getSetting } from '@woocommerce/settings';
+import { CheckboxControl } from '@woocommerce/blocks-checkout';
 import {
-	CheckboxControl,
-	ValidatedTextInput,
 	StoreNoticesContainer,
-} from '@woocommerce/blocks-checkout';
+	ValidatedTextInput,
+} from '@woocommerce/blocks-components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { CHECKOUT_STORE_KEY } from '@woocommerce/block-data';
 import { isEmail } from '@wordpress/url';
-
-/**
- * Internal dependencies
- */
 
 const Block = (): JSX.Element => {
 	const { customerId, shouldCreateAccount } = useSelect( ( select ) => {
@@ -65,6 +61,7 @@ const Block = (): JSX.Element => {
 				id="email"
 				type="email"
 				autoComplete="email"
+				errorId={ 'billing_email' }
 				label={ __( 'Email address', 'woo-gutenberg-products-block' ) }
 				value={ billingAddress.email }
 				required={ true }

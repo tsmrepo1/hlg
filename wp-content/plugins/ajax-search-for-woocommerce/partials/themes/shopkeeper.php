@@ -15,11 +15,6 @@ add_action( 'getbowtied_product_search', function () {
 	echo do_shortcode( '[wcas-search-form layout="classic" mobile_overlay="1" mobile_breakpoint="767"]' );
 } );
 
-// Change mobile breakpoint from 992 to 767
-add_filter( 'dgwt/wcas/scripts/mobile_breakpoint', function () {
-	return 767;
-} );
-
 add_action( 'wp_head', function () {
 	?>
 	<style>
@@ -100,7 +95,7 @@ add_action( 'wp_footer', function () {
 
 					if ($input.length) {
 						setTimeout(function () {
-							$input.focus();
+							$input.trigger('focus');
 						}, 500);
 					}
 				});
@@ -113,7 +108,7 @@ add_action( 'wp_footer', function () {
 
 						setTimeout(function () {
 							if ($('.site-search-close button').length) {
-								$('.site-search-close button').click();
+								$('.site-search-close button').trigger('click');
 							}
 						}, 500);
 					}
