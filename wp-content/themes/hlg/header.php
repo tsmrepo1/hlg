@@ -37,13 +37,13 @@ global $current_user;
               </button>
 
               <!-- LOGO -->
-              <a href="<?php echo home_url(); ?>" class="inline-block site-header__logo relative">
+              <a href="<?php echo home_url(); ?>" class="inline-block site-header__logo absolute -top-2 -xl:-top-4 -xl:left-16 -md:left-10">
               <?php
               $custom_logo_id = get_theme_mod( 'custom_logo' );
               $logo = wp_get_attachment_image_src( $custom_logo_id , 'full' );
 
               if ( has_custom_logo() ) {
-                echo '<img src="' . esc_url( $logo[0] ) . '" alt="' . get_bloginfo( 'name' ) . '" alt="logo" width="120" height="70" class="w-24 md:w-28 xl:w-32 2xl:w-36 lg:px-4 relative z-20">';
+                echo '<img src="' . esc_url( $logo[0] ) . '" alt="' . get_bloginfo( 'name' ) . '" alt="logo" width="211" height="154" class="-3xl:max-w-[80%] -xl:max-w-[70%] -md:max-w-[50%]">';
               } else {
                 echo '<h1>' . get_bloginfo('name') . '</h1>';
               }
