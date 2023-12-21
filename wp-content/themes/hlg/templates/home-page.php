@@ -117,8 +117,8 @@ while ( have_posts() ) : the_post();
                               <?php } ?>
                             </a>
                           </figure>
-
-                          <span class="bg-primary font-heading rounded-[3.75rem] leading-[1] text-white absolute top-3 left-1 text-sm px-5 py-1"><?php the_title(); ?></span>
+                          <?php if($dsp!=''){ ?>
+                          <span class="bg-primary font-heading rounded-[3.75rem] leading-[1] text-white absolute top-3 left-1 text-sm px-5 py-1"><?php echo $dsp;?>%</span><?php } ?>
                         </div>
 
                         <div class="my-4 py-4 px-3 text-center border border-[#f2f2f2] rounded-[0.875rem]">
@@ -138,9 +138,7 @@ while ( have_posts() ) : the_post();
 
                         <div class="flex items-center">
                           <a href="<?php the_permalink(); ?>" class="btn btn-primary w-full btn--order">Order Now</a>
-                          <!-- <a href="#" class="flex-shrink-0 bg-primary rounded-full inline-flex items-center justify-center w-[2.375rem] h-[2.375rem] ml-3" title="Add To Wishlist"> -->
-                            <img src="<?php echo get_template_directory_uri();?>/assets/images/wishlist-heart-icon.png" alt="" />
-                          </a>
+                          <?php echo do_shortcode("[ti_wishlists_addtowishlist loop=no]");?>
                         </div>
                       </div>
                     </div>
@@ -236,6 +234,16 @@ while ( have_posts() ) : the_post();
                     while ( $bannerPro->have_posts() ) {
                     $bannerPro->the_post();
                     $image1Pro = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'full' );
+
+                    $mrp = get_post_meta( get_the_ID(), '_regular_price', true);
+                    $seling_price = get_post_meta( get_the_ID(), '_sale_price', true);
+                    if(!empty($mrp) && !empty($seling_price)){ 
+                        $dsp = (int)((($mrp - $seling_price) / $mrp) * 100);
+                    }else{
+                        $dsp ='';
+                    }
+
+
                     ?>
                       <div class="swiper-slide p-3">
                         <div class="product-card bg-white p-3 rounded-[0.875rem] shadow-[0_10px_9px_rgba(0,0,0,0.06)]">
@@ -250,7 +258,8 @@ while ( have_posts() ) : the_post();
                               </a>
                             </figure>
 
-                            <span class="bg-primary font-heading rounded-[3.75rem] leading-[1] text-white absolute top-3 left-1 text-sm px-5 py-1"><?php the_title(); ?></span>
+                          <?php if($dsp!=''){ ?>
+                          <span class="bg-primary font-heading rounded-[3.75rem] leading-[1] text-white absolute top-3 left-1 text-sm px-5 py-1"><?php echo $dsp;?>%</span><?php } ?>
                           </div>
 
                           <div class="my-4 py-4 px-3 text-center border border-[#f2f2f2] rounded-[0.875rem]">
@@ -268,7 +277,7 @@ while ( have_posts() ) : the_post();
 
                           <div class="flex items-center">
                             <a href="<?php echo get_permalink(); ?>" class="btn btn-primary w-full btn--order">Order Now</a>
-                            </a>
+                            <?php echo do_shortcode("[ti_wishlists_addtowishlist loop=no]");?>
                           </div>
                         </div>
                       </div>
@@ -326,6 +335,16 @@ while ( have_posts() ) : the_post();
                   while ( $loop->have_posts() ) : $loop->the_post();
                   $imgurl = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'full' );
                   $title=get_the_title($post->ID);
+
+                  $mrp = get_post_meta( get_the_ID(), '_regular_price', true);
+                    $seling_price = get_post_meta( get_the_ID(), '_sale_price', true);
+                    if(!empty($mrp) && !empty($seling_price)){ 
+                        $dsp = (int)((($mrp - $seling_price) / $mrp) * 100);
+                    }else{
+                        $dsp ='';
+                    }
+
+                    
                   ?>
 
                     <div class="swiper-slide p-3">
@@ -343,7 +362,9 @@ while ( have_posts() ) : the_post();
                                   </a>
                                 </figure>
 
-                                <span class="bg-primary font-heading rounded-[3.75rem] leading-[1] text-white absolute top-3 left-1 text-sm px-5 py-1"><?php the_title(); ?></span>
+                                <?php if($dsp!=''){ ?>
+                                <span class="bg-primary font-heading rounded-[3.75rem] leading-[1] text-white absolute top-3 left-1 text-sm px-5 py-1"><?php echo $dsp;?>%</span>
+                                <?php } ?>
                               </div>
 
                               <div class="my-4 py-4 px-3 text-center border border-[#f2f2f2] rounded-[0.875rem]">
@@ -361,7 +382,7 @@ while ( have_posts() ) : the_post();
 
                               <div class="flex items-center">
                                 <a href="<?php echo get_permalink(); ?>" class="btn btn-primary w-full btn--order">Order Now</a>
-                                </a>
+                                <?php echo do_shortcode("[ti_wishlists_addtowishlist loop=no]");?>
                               </div>
                             </div>
                           </div>
