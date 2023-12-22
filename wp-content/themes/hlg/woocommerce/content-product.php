@@ -58,7 +58,7 @@ if(!empty($mrp) && !empty($seling_price)){
     <div class="my-4 py-4 px-3 text-center border border-[#f2f2f2] rounded-[0.875rem]">
     <?php if($seling_price!=''){ ?>
     <span class="text-2xl font-bold text-[#f00000]">$<?php echo $seling_price; ?></span>
-    <span class="my-4 py-4 px-3 text-center border border-[#f2f2f2] rounded-[0.875rem]">$<?php echo $mrp; ?></span>
+    <span class="my-4 py-4 px-3 text-center rounded-[0.875rem]">$<?php echo $mrp; ?></span>
     <?php  }else{ ?>
     <span class="text-2xl font-bold text-[#f00000]">$<?php echo $mrp; ?></span>
     <?php } ?>
