@@ -192,7 +192,7 @@ while ( have_posts() ) : the_post();
         </div>
       </section>
 
-      <div class="bg-center bg-cover bg-no-repeat" style="background-image: url(assets/images/Shape\ 6.png)">
+      <div class="bg-center bg-cover bg-no-repeat" style="background-image: url(<?php echo get_template_directory_uri();?>/assets/images/Shape\ 6.png)">
         <!-- Featured Products Section -->
         <section class="featured-products-section pb-[3.25rem]">
           <div class="container">
@@ -498,7 +498,7 @@ while ( have_posts() ) : the_post();
       </section>
 
       <!-- WHY CHOOSE US SECTION -->
-      <section class="why-choose-us-section pt-20 bg-center bg-cover bg-no-repeat -lg:pt-16 -md:pt-[3.75rem]" style="background-image: url(assets/images/why-choose-us-bg-shape.png)">
+      <section class="why-choose-us-section pt-20 bg-center bg-cover bg-no-repeat -lg:pt-16 -md:pt-[3.75rem]" style="background-image: url(<?php echo get_template_directory_uri();?>/assets/images/why-choose-us-bg-shape.png)">
         <div class="container">
           <div class="grid grid-cols-12 gap-x-7 items-center -lg:gap-y-10 -lg:gap-x-0">
 

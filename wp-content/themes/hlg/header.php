@@ -175,7 +175,7 @@ global $current_user;
         </div>
         <div class="offcanvas-body flex-grow p-4 overflow-y-auto">
           <nav class="site-header__mobile-nav mt-14">
-            <ul class="nav-menu">
+            <!-- <ul class="nav-menu">
               <li class="mb-3 last:mb-0">
                 <a href="products.html">Alkaline Water Ionizers</a>
               </li>
@@ -188,7 +188,19 @@ global $current_user;
               <li class="mb-3 last:mb-0">
                 <a href="contact-us.html">Contact Us!</a>
               </li>
-            </ul>
+            </ul> -->
+            <?php
+                  wp_nav_menu( array(
+                  'theme_location'  => 'menu-1',
+                  'depth'           => 2, // 1 = no dropdowns, 2 = with dropdowns.
+                  'container'       => '',
+                  'container_class' => '',
+                  'container_id'    => '',
+                  'menu_class'      => 'nav-menu',
+                  'fallback_cb'     => 'WP_Bootstrap_Navwalker::fallback',
+                  'walker'          => new WP_Bootstrap_Navwalker(),
+                  ) );
+              ?>
           </nav>
         </div>
       </div>
